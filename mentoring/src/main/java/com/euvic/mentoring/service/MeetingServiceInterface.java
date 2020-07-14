@@ -7,4 +7,6 @@ public interface MeetingServiceInterface {
 
     Meeting getMeeting(int id);
     List<Meeting> getMeetings();
+    Meeting saveMeeting(Meeting meeting);
+    void deleteMeeting(int id);
 }

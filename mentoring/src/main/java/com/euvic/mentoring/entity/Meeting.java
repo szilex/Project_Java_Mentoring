@@ -18,17 +18,21 @@ public class Meeting {
     @Column(name = "date")
     private LocalDate date;
 
+    /*@JsonFormat(pattern = "HH:mm")
+    @JsonDeserialize(using = SqlTimeDeserializer.class)*/
     @Column(name = "start_time")
     private LocalTime startTime;
 
+    /*@JsonFormat(pattern = "HH:mm")
+    @JsonDeserialize(using = SqlTimeDeserializer.class)*/
     @Column(name = "end_time")
     private LocalTime endTime;
 
-    @ManyToOne(cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH}/*, fetch = FetchType.LAZY*/)
+    @ManyToOne(cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
     @JoinColumn(name = "mentor_id")
     private Mentor mentor;
 
-    @ManyToOne(cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH}/*, fetch = FetchType.LAZY*/)
+    @ManyToOne(cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
     @JoinColumn(name = "student_id")
     private Student student;
 

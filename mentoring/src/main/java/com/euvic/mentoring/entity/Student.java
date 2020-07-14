@@ -26,8 +26,8 @@ public class Student {
     private String mail;
 
     @OneToMany(mappedBy = "student",
-                cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH}/*,
-                fetch = FetchType.LAZY*/)
+                cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH},
+                fetch = FetchType.LAZY)
     private List<Meeting> meetings;
 
     public Student() {

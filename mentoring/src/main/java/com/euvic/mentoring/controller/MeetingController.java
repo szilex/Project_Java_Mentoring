@@ -2,10 +2,9 @@ package com.euvic.mentoring.controller;
 
 import com.euvic.mentoring.entity.Meeting;
 import com.euvic.mentoring.service.MeetingServiceInterface;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import com.euvic.mentoring.service.UserServiceInterface;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -14,9 +13,12 @@ import java.util.List;
 public class MeetingController {
 
     private MeetingServiceInterface meetingService;
+    private UserServiceInterface userService;
 
-    public MeetingController(MeetingServiceInterface meetingService) {
+    @Autowired
+    public MeetingController(MeetingServiceInterface meetingService, UserServiceInterface userService) {
         this.meetingService = meetingService;
+        this.userService = userService;
     }
 
     @GetMapping("/{id}")
@@ -27,5 +29,20 @@ public class MeetingController {
     @GetMapping
     public List<Meeting> getMeetings() {
         return meetingService.getMeetings();
+    }
+
+    @PostMapping
+    public Meeting addMeeting(@RequestBody Meeting meeting) {
+        return meetingService.saveMeeting(meeting);
+    }
+
+    @PutMapping
+    public Meeting updateMeeting(@RequestBody Meeting meeting) {
+        return meetingService.saveMeeting(meeting);
+    }
+
+    @DeleteMapping("/{id}")
+    public void deleteMeeting(@PathVariable int id) {
+        meetingService.deleteMeeting(id);
     }
 }

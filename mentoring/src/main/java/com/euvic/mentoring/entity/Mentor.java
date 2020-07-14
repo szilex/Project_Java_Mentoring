@@ -26,8 +26,8 @@ public class Mentor {
     private String mail;
 
     @OneToMany(mappedBy = "mentor",
-                cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH}/*,
-                fetch = FetchType.LAZY*/)
+                cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH},
+                fetch = FetchType.LAZY)
     private List<Meeting> meetings;
 
     public Mentor() {

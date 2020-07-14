@@ -7,6 +7,7 @@ import com.euvic.mentoring.repository.StudentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.util.List;
 
 @Service
@@ -23,16 +24,20 @@ public class UserService implements UserServiceInterface {
 
 
     @Override
+    @Transactional
     public Mentor getMentor() {
         return mentorRepository.findFirstByOrderByIdAsc();
     }
 
+    //TODO: Handle no such element exception thrown by get() method
     @Override
+    @Transactional
     public Student getStudent(int id) {
-        return studentRepository.findById(id).get();          //method throws NoSuchElementException
+        return studentRepository.findById(id).get();
     }
 
     @Override
+    @Transactional
     public List<Student> getStudents() {
         return studentRepository.findAll();
     }
