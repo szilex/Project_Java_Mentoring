@@ -18,13 +18,9 @@ public class Meeting {
     @Column(name = "date")
     private LocalDate date;
 
-    /*@JsonFormat(pattern = "HH:mm")
-    @JsonDeserialize(using = SqlTimeDeserializer.class)*/
     @Column(name = "start_time")
     private LocalTime startTime;
 
-    /*@JsonFormat(pattern = "HH:mm")
-    @JsonDeserialize(using = SqlTimeDeserializer.class)*/
     @Column(name = "end_time")
     private LocalTime endTime;
 
@@ -45,6 +41,15 @@ public class Meeting {
         this.startTime = startTime;
         this.endTime = endTime;
         this.mentor = mentor;
+    }
+
+    public Meeting(LocalDate date, LocalTime startTime, LocalTime endTime, Mentor mentor, Student student) {
+        this.id = id;
+        this.date = date;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.mentor = mentor;
+        this.student = student;
     }
 
     public int getId() {

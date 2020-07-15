@@ -1,13 +1,11 @@
 package com.euvic.mentoring.controller;
 
+import com.euvic.mentoring.aspect.UserNotFoundException;
 import com.euvic.mentoring.entity.Mentor;
 import com.euvic.mentoring.entity.Student;
-import com.euvic.mentoring.service.UserServiceInterface;
+import com.euvic.mentoring.service.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -15,26 +13,41 @@ import java.util.List;
 @RequestMapping("/user")
 public class UserController {
 
-    private UserServiceInterface userService;
+    private IUserService userService;
 
     @Autowired
-    public UserController(UserServiceInterface userService) {
+    public UserController(IUserService userService) {
         this.userService = userService;
     }
 
     @GetMapping("/mentor")
-    public Mentor getMentor() {
+    public Mentor getMentor() throws UserNotFoundException {
         return userService.getMentor();
     }
 
     @GetMapping("/student/{id}")
-    public Student getStudent(@PathVariable int id) {
+    public Student getStudent(@PathVariable int id) throws UserNotFoundException {
         return userService.getStudent(id);
     }
 
     @GetMapping("/student")
     public List<Student> getStudents() {
         return userService.getStudents();
+    }
+
+    @PostMapping("/student")
+    public Student saveStudent(@RequestBody Student student) {
+        return userService.saveStudent(student);
+    }
+
+    @PutMapping("/student")
+    public Student updateStudent(@RequestBody Student student) {
+        return userService.saveStudent(student);
+    }
+
+    @DeleteMapping("/student/{id}")
+    public void deleteStudent(@PathVariable int id) throws UserNotFoundException {
+        userService.deleteStudent(id);
     }
 
 

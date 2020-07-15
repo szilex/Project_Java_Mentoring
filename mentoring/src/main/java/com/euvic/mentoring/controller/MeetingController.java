@@ -1,8 +1,9 @@
 package com.euvic.mentoring.controller;
 
-import com.euvic.mentoring.entity.Meeting;
-import com.euvic.mentoring.service.MeetingServiceInterface;
-import com.euvic.mentoring.service.UserServiceInterface;
+import com.euvic.mentoring.aspect.MeetingNotFoundException;
+import com.euvic.mentoring.aspect.UserNotFoundException;
+import com.euvic.mentoring.entity.SimpleMeeting;
+import com.euvic.mentoring.service.IMeetingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,32 +13,35 @@ import java.util.List;
 @RequestMapping("/meeting")
 public class MeetingController {
 
-    private MeetingServiceInterface meetingService;
-    private UserServiceInterface userService;
+    private IMeetingService meetingService;
 
     @Autowired
-    public MeetingController(MeetingServiceInterface meetingService, UserServiceInterface userService) {
+    public MeetingController(IMeetingService meetingService) {
         this.meetingService = meetingService;
-        this.userService = userService;
     }
 
     @GetMapping("/{id}")
-    public Meeting getMeeting(@PathVariable int id) {
+    public SimpleMeeting getMeeting(@PathVariable int id) {
         return meetingService.getMeeting(id);
     }
 
     @GetMapping
-    public List<Meeting> getMeetings() {
+    public List<SimpleMeeting> getMeetings() {
         return meetingService.getMeetings();
     }
 
+    @GetMapping("/student/{id}")
+    public List<SimpleMeeting> getStudentMeetings(@PathVariable int id) throws UserNotFoundException {
+        return meetingService.getStudentMeetings(id);
+    }
+
     @PostMapping
-    public Meeting addMeeting(@RequestBody Meeting meeting) {
+    public SimpleMeeting addMeeting(@RequestBody SimpleMeeting meeting) throws MeetingNotFoundException, UserNotFoundException {
         return meetingService.saveMeeting(meeting);
     }
 
     @PutMapping
-    public Meeting updateMeeting(@RequestBody Meeting meeting) {
+    public SimpleMeeting updateMeeting(@RequestBody SimpleMeeting meeting) throws MeetingNotFoundException, UserNotFoundException {
         return meetingService.saveMeeting(meeting);
     }
 
