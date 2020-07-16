@@ -4,7 +4,7 @@ import com.euvic.mentoring.aspect.MeetingNotFoundException;
 import com.euvic.mentoring.aspect.UserNotFoundException;
 import com.euvic.mentoring.entity.Meeting;
 import com.euvic.mentoring.entity.Mentor;
-import com.euvic.mentoring.entity.SimpleMeeting;
+import com.euvic.mentoring.entity.MeetingDetails;
 import com.euvic.mentoring.entity.Student;
 import com.euvic.mentoring.repository.MeetingRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,65 +28,65 @@ public class MeetingService implements IMeetingService {
     }
 
     @Override
-    public SimpleMeeting getMeeting(int id) throws MeetingNotFoundException {
+    public MeetingDetails getMeeting(int id) throws MeetingNotFoundException {
 
         Optional<Meeting> meeting = meetingRepository.findById(id);
         if (meeting.isPresent()) {
-            return new SimpleMeeting(meeting.get());
+            return new MeetingDetails(meeting.get());
         }
 
         throw new MeetingNotFoundException(id);
     }
 
     @Override
-    public List<SimpleMeeting> getMeetings() {
+    public List<MeetingDetails> getMeetings() {
 
         List<Meeting> meetings = meetingRepository.findAll();
         return meetings.stream()
-                .map(meeting -> new SimpleMeeting(meeting))
+                .map(meeting -> new MeetingDetails(meeting))
                 .collect(Collectors.toList());
 
     }
 
     @Override
-    public List<SimpleMeeting> getStudentMeetings(int id) throws UserNotFoundException {
+    public List<MeetingDetails> getStudentMeetings(int id) throws UserNotFoundException {
 
         List<Meeting> meetings = meetingRepository.findByStudent(userService.getStudent(id));
         return meetings.stream()
-                .map(meeting -> new SimpleMeeting(meeting))
+                .map(meeting -> new MeetingDetails(meeting))
                 .collect(Collectors.toList());
     }
 
     @Override
     @Transactional
-    public SimpleMeeting saveMeeting(SimpleMeeting simpleMeeting) throws MeetingNotFoundException, UserNotFoundException {
+    public MeetingDetails saveMeeting(MeetingDetails meetingDetails) throws MeetingNotFoundException, UserNotFoundException {
 
         Meeting meeting;
         Mentor mentor = userService.getMentor();
         Student student = null;
 
-        if (simpleMeeting.getStudentId() != null) {
-            student = userService.getStudent(simpleMeeting.getStudentId());
+        if (meetingDetails.getStudentId() != null) {
+            student = userService.getStudent(meetingDetails.getStudentId());
         }
 
-        if (simpleMeeting.getId() != null) {
-            Optional<Meeting> optionalMeeting = meetingRepository.findById(simpleMeeting.getId());
+        if (meetingDetails.getId() != null) {
+            Optional<Meeting> optionalMeeting = meetingRepository.findById(meetingDetails.getId());
             if (optionalMeeting.isPresent()) {
                 meeting = optionalMeeting.get();
-                meeting.setDate(simpleMeeting.getDate());
-                meeting.setStartTime(simpleMeeting.getStartTime());
-                meeting.setEndTime(simpleMeeting.getEndTime());
+                meeting.setDate(meetingDetails.getDate());
+                meeting.setStartTime(meetingDetails.getStartTime());
+                meeting.setEndTime(meetingDetails.getEndTime());
                 meeting.setStudent(student);
             } else {
-                throw new MeetingNotFoundException(simpleMeeting.getId());
+                throw new MeetingNotFoundException(meetingDetails.getId());
             }
         } else {
-            meeting = new Meeting(simpleMeeting.getDate(), simpleMeeting.getStartTime(), simpleMeeting.getEndTime(), mentor, student);
+            meeting = new Meeting(meetingDetails.getDate(), meetingDetails.getStartTime(), meetingDetails.getEndTime(), mentor, student);
         }
 
         Meeting savedMeeting = meetingRepository.save(meeting);
 
-        return new SimpleMeeting(savedMeeting);
+        return new MeetingDetails(savedMeeting);
     }
 
     @Override

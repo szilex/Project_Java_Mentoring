@@ -16,6 +16,12 @@ public class Mentor {
     @Column(name = "id")
     private int id;
 
+    @Column(name = "login")
+    private String login;
+
+    @Column(name = "password")
+    private String password;
+
     @Column(name = "first_name")
     private String firstName;
 
@@ -34,7 +40,9 @@ public class Mentor {
 
     }
 
-    public Mentor(String firstName, String lastName, String mail) {
+    public Mentor(String login, String password, String firstName, String lastName, String mail) {
+        this.login = login;
+        this.password = password;
         this.firstName = firstName;
         this.lastName = lastName;
         this.mail = mail;
@@ -46,6 +54,22 @@ public class Mentor {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public String getLogin() {
+        return login;
+    }
+
+    public void setLogin(String login) {
+        this.login = login;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     public String getFirstName() {
@@ -84,7 +108,10 @@ public class Mentor {
     @Override
     public String toString() {
         return "Mentor{" +
-                "firstName='" + firstName + '\'' +
+                "id=" + id +
+                ", login='" + login + '\'' +
+                ", password='" + password + '\'' +
+                ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
                 ", mail='" + mail + '\'' +
                 '}';

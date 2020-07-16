@@ -2,7 +2,7 @@ package com.euvic.mentoring.controller;
 
 import com.euvic.mentoring.aspect.MeetingNotFoundException;
 import com.euvic.mentoring.aspect.UserNotFoundException;
-import com.euvic.mentoring.entity.SimpleMeeting;
+import com.euvic.mentoring.entity.MeetingDetails;
 import com.euvic.mentoring.service.IMeetingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -21,32 +21,32 @@ public class MeetingController {
     }
 
     @GetMapping("/{id}")
-    public SimpleMeeting getMeeting(@PathVariable int id) {
+    public MeetingDetails getMeeting(@PathVariable int id) throws MeetingNotFoundException {
         return meetingService.getMeeting(id);
     }
 
     @GetMapping
-    public List<SimpleMeeting> getMeetings() {
+    public List<MeetingDetails> getMeetings() {
         return meetingService.getMeetings();
     }
 
     @GetMapping("/student/{id}")
-    public List<SimpleMeeting> getStudentMeetings(@PathVariable int id) throws UserNotFoundException {
+    public List<MeetingDetails> getStudentMeetings(@PathVariable int id) throws UserNotFoundException {
         return meetingService.getStudentMeetings(id);
     }
 
     @PostMapping
-    public SimpleMeeting addMeeting(@RequestBody SimpleMeeting meeting) throws MeetingNotFoundException, UserNotFoundException {
+    public MeetingDetails addMeeting(@RequestBody MeetingDetails meeting) throws MeetingNotFoundException, UserNotFoundException {
         return meetingService.saveMeeting(meeting);
     }
 
     @PutMapping
-    public SimpleMeeting updateMeeting(@RequestBody SimpleMeeting meeting) throws MeetingNotFoundException, UserNotFoundException {
+    public MeetingDetails updateMeeting(@RequestBody MeetingDetails meeting) throws MeetingNotFoundException, UserNotFoundException {
         return meetingService.saveMeeting(meeting);
     }
 
     @DeleteMapping("/{id}")
-    public void deleteMeeting(@PathVariable int id) {
+    public void deleteMeeting(@PathVariable int id) throws MeetingNotFoundException {
         meetingService.deleteMeeting(id);
     }
 }

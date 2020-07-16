@@ -3,7 +3,7 @@ package com.euvic.mentoring.entity;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
-public class SimpleMeeting {
+public class MeetingDetails {
 
     private static final long serialVersionUID = 1L;
     
@@ -14,16 +14,16 @@ public class SimpleMeeting {
     private Integer mentorId;
     private Integer studentId;
 
-    public SimpleMeeting() { }
+    public MeetingDetails() { }
 
-    public SimpleMeeting(LocalDate date, LocalTime startTime, LocalTime endTime, Integer mentorId) {
+    public MeetingDetails(LocalDate date, LocalTime startTime, LocalTime endTime, Integer mentorId) {
         this.date = date;
         this.startTime = startTime;
         this.endTime = endTime;
         this.mentorId = mentorId;
     }
 
-    public SimpleMeeting(LocalDate date, LocalTime startTime, LocalTime endTime, Integer mentorId, Integer studentId) {
+    public MeetingDetails(LocalDate date, LocalTime startTime, LocalTime endTime, Integer mentorId, Integer studentId) {
         this.date = date;
         this.startTime = startTime;
         this.endTime = endTime;
@@ -31,7 +31,7 @@ public class SimpleMeeting {
         this.studentId = studentId;
     }
     
-    public SimpleMeeting(Meeting meeting) {
+    public MeetingDetails(Meeting meeting) {
         this(meeting.getDate(), meeting.getStartTime(), meeting.getEndTime(), meeting.getMentor().getId());
         this.id = meeting.getId();
         if (meeting.getStudent() != null) {
