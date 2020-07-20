@@ -50,5 +50,10 @@ public class UserController {
         userService.deleteStudent(id);
     }
 
+    @GetMapping("/test")
+    public String anything() {
+        return "yay";
+    }
+
 
 }
