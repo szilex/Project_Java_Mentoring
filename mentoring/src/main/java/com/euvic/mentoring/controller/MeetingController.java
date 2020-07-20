@@ -42,7 +42,7 @@ public class MeetingController {
 
     @PutMapping
     public MeetingDetails updateMeeting(@RequestBody MeetingDetails meeting) throws MeetingNotFoundException, UserNotFoundException {
-        return meetingService.saveMeeting(meeting);
+        return meetingService.updateMeeting(meeting);
     }
 
     @DeleteMapping("/{id}")

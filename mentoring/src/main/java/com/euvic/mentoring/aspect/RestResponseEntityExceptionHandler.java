@@ -25,6 +25,16 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
         return super.handleTypeMismatch(exception, headers, status, request);
     }
 
+    @ExceptionHandler(value = { IllegalArgumentException.class })
+    protected ResponseEntity<Object> handleIllegalArgument(IllegalArgumentException exception, WebRequest request) {
+
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("message", exception.getMessage());
+
+        return handleExceptionInternal(exception, body, new HttpHeaders(), HttpStatus.BAD_REQUEST, request);
+    }
+
     @ExceptionHandler(value = { NoSuchElementException.class })
     protected ResponseEntity<Object> handleNoSuchElement(Exception exception, WebRequest request) {
 

@@ -7,12 +7,12 @@ public class MeetingDetails {
 
     private static final long serialVersionUID = 1L;
     
-    private Integer id;
+    private int id;
     private LocalDate date;
     private LocalTime startTime;
     private LocalTime endTime;
-    private Integer mentorId;
-    private Integer studentId;
+    private int mentorId;
+    private int studentId;
 
     public MeetingDetails() { }
 
@@ -71,19 +71,19 @@ public class MeetingDetails {
         this.endTime = endTime;
     }
 
-    public Integer getMentorId() {
+    public int getMentorId() {
         return mentorId;
     }
 
-    public void setMentorId(Integer mentorId) {
+    public void setMentorId(int mentorId) {
         this.mentorId = mentorId;
     }
 
-    public Integer getStudentId() {
+    public int getStudentId() {
         return studentId;
     }
 
-    public void setStudentId(Integer studentId) {
+    public void setStudentId(int studentId) {
         this.studentId = studentId;
     }
 

@@ -58,32 +58,45 @@ public class MeetingService implements IMeetingService {
 
     @Override
     @Transactional
-    public MeetingDetails saveMeeting(MeetingDetails meetingDetails) throws MeetingNotFoundException, UserNotFoundException {
+    public MeetingDetails saveMeeting(MeetingDetails meetingDetails) throws UserNotFoundException {
 
-        Meeting meeting;
+        if (meetingDetails.getId() != 0 && meetingDetails.getStudentId() != 0) {
+            throw new IllegalArgumentException("Illegal argument specified");
+        }
+
+        Optional<Meeting> dbMeeting = meetingRepository.findById(meetingDetails.getId());
+        if (dbMeeting.isPresent()) {
+            throw new IllegalArgumentException("Meeting with specified id already exists: " + meetingDetails.getId());
+        }
+
         User mentor = userService.getMentor();
-        User student = null;
-
-        if (meetingDetails.getStudentId() != null) {
-            student = userService.getStudent(meetingDetails.getStudentId());
-        }
-
-        if (meetingDetails.getId() != null) {
-            Optional<Meeting> optionalMeeting = meetingRepository.findById(meetingDetails.getId());
-            if (optionalMeeting.isPresent()) {
-                meeting = optionalMeeting.get();
-                meeting.setDate(meetingDetails.getDate());
-                meeting.setStartTime(meetingDetails.getStartTime());
-                meeting.setEndTime(meetingDetails.getEndTime());
-                meeting.setStudent(student);
-            } else {
-                throw new MeetingNotFoundException(meetingDetails.getId());
-            }
-        } else {
-            meeting = new Meeting(meetingDetails.getDate(), meetingDetails.getStartTime(), meetingDetails.getEndTime(), mentor, student);
-        }
-
+        Meeting meeting = new Meeting(meetingDetails.getDate(), meetingDetails.getStartTime(), meetingDetails.getEndTime(), mentor, null);
         Meeting savedMeeting = meetingRepository.save(meeting);
+
+        return new MeetingDetails(savedMeeting);
+    }
+
+    @Override
+    @Transactional
+    public MeetingDetails updateMeeting(MeetingDetails meetingDetails) throws UserNotFoundException, MeetingNotFoundException {
+
+        if (meetingDetails.getId() == 0 || meetingDetails.getStudentId() == 0) {
+            throw new IllegalArgumentException("Insufficient argument list");
+        }
+
+        Optional<Meeting> dbMeeting = meetingRepository.findById(meetingDetails.getId());
+        if (!dbMeeting.isPresent()) {
+            throw new MeetingNotFoundException(meetingDetails.getId());
+        }
+
+        Meeting temporaryMeeting = dbMeeting.get();
+        if(temporaryMeeting.getStudent() != null) {
+            throw new IllegalArgumentException("Meeting with specified id is already reserved: " + meetingDetails.getId());
+        }
+
+        User student = userService.getStudent(meetingDetails.getStudentId());
+        temporaryMeeting.setStudent(student);
+        Meeting savedMeeting = meetingRepository.save(temporaryMeeting);
 
         return new MeetingDetails(savedMeeting);
     }
