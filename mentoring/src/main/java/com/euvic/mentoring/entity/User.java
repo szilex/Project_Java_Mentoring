@@ -6,21 +6,27 @@ import javax.persistence.*;
 import java.util.List;
 
 @Entity
-@Table(name = "student")
-public class Student {
+@Table(name = "users")
+public class User {
 
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY )
     @Column(name = "id")
     private int id;
 
-    @Column(name = "login")
-    private String login;
+    @Column(name = "mail")
+    private String mail;
 
     @Column(name = "password")
     private String password;
+
+    @Column(name = "authority")
+    private String authority;
+
+    @Column(name = "enabled")
+    private int enabled;
 
     @Column(name = "first_name")
     private String firstName;
@@ -28,24 +34,20 @@ public class Student {
     @Column(name = "last_name")
     private String lastName;
 
-    @Column(name = "mail")
-    private String mail;
-
     @OneToMany(mappedBy = "student",
                 cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH},
                 fetch = FetchType.LAZY)
     private List<Meeting> meetings;
 
-    public Student() {
+    public User() {
 
     }
 
-    public Student(String login, String password, String firstName, String lastName, String mail) {
-        this.login = login;
+    public User(String mail, String password, String firstName, String lastName) {
+        this.mail = mail;
         this.password = password;
         this.firstName = firstName;
         this.lastName = lastName;
-        this.mail = mail;
     }
 
     public int getId() {
@@ -56,12 +58,12 @@ public class Student {
         this.id = id;
     }
 
-    public String getLogin() {
-        return login;
+    public String getMail() {
+        return mail;
     }
 
-    public void setLogin(String login) {
-        this.login = login;
+    public void setMail(String mail) {
+        this.mail = mail;
     }
 
     public String getPassword() {
@@ -70,6 +72,22 @@ public class Student {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getAuthority() {
+        return authority;
+    }
+
+    public void setAuthority(String authority) {
+        this.authority = authority;
+    }
+
+    public int getEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(int enabled) {
+        this.enabled = enabled;
     }
 
     public String getFirstName() {
@@ -88,14 +106,6 @@ public class Student {
         this.lastName = lastName;
     }
 
-    public String getMail() {
-        return mail;
-    }
-
-    public void setMail(String mail) {
-        this.mail = mail;
-    }
-
     @JsonIgnore
     public List<Meeting> getMeetings() {
         return meetings;
@@ -107,10 +117,14 @@ public class Student {
 
     @Override
     public String toString() {
-        return "Student{" +
-                "firstName='" + firstName + '\'' +
-                ", lastName='" + lastName + '\'' +
+        return "User{" +
+                "id=" + id +
                 ", mail='" + mail + '\'' +
+                ", password='" + password + '\'' +
+                ", authority='" + authority + '\'' +
+                ", enabled=" + enabled +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
                 '}';
     }
 }

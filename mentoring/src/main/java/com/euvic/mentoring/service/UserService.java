@@ -1,10 +1,8 @@
 package com.euvic.mentoring.service;
 
 import com.euvic.mentoring.aspect.UserNotFoundException;
-import com.euvic.mentoring.entity.Mentor;
-import com.euvic.mentoring.entity.Student;
-import com.euvic.mentoring.repository.MentorRepository;
-import com.euvic.mentoring.repository.StudentRepository;
+import com.euvic.mentoring.entity.User;
+import com.euvic.mentoring.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,20 +13,17 @@ import java.util.Optional;
 @Service
 public class UserService implements IUserService {
 
-    private MentorRepository mentorRepository;
-    private StudentRepository studentRepository;
+    private UserRepository userRepository;
 
     @Autowired
-    public UserService(MentorRepository mentorRepository, StudentRepository studentRepository) {
-        this.mentorRepository = mentorRepository;
-        this.studentRepository = studentRepository;
+    public UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
     }
 
-
     @Override
-    public Mentor getMentor() throws UserNotFoundException {
+    public User getMentor() throws UserNotFoundException {
 
-        Optional<Mentor> mentor = mentorRepository.findFirstByOrderByIdAsc();
+        Optional<User> mentor = userRepository.findFirstByAuthorityOrderByIdAsc("ROLE_MENTOR");
         if (mentor.isPresent()) {
             return mentor.get();
         }
@@ -37,9 +32,9 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public Mentor getMentor(int id) throws UserNotFoundException {
+    public User getMentor(int id) throws UserNotFoundException {
 
-        Optional<Mentor> mentor = mentorRepository.findById(id);
+        Optional<User> mentor = userRepository.findByIdAndAuthority(id, "ROLE_MENTOR");
         if (mentor.isPresent()) {
             return mentor.get();
         }
@@ -48,9 +43,9 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public Student getStudent(int id) throws UserNotFoundException {
+    public User getStudent(int id) throws UserNotFoundException {
 
-        Optional<Student> student = studentRepository.findById(id);
+        Optional<User> student = userRepository.findByIdAndAuthority(id, "ROLE_STUDENT");
         if (student.isPresent()) {
             return student.get();
         }
@@ -59,20 +54,41 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public List<Student> getStudents() {
-        return studentRepository.findAll();
+    public List<User> getStudents() {
+        return userRepository.findAllByAuthority("ROLE_STUDENT");
     }
 
     @Override
-    public Student saveStudent(Student student) {
-        return studentRepository.save(student);
+    public User saveStudent(User student) {
+        student.setAuthority("ROLE_STUDENT");
+        student.setEnabled(1);
+
+        return userRepository.save(student);
+    }
+
+    @Override
+    public User updateStudent(User student) throws UserNotFoundException {
+
+        Optional<User> dbStudent = userRepository.findByIdAndAuthority(student.getId(), "ROLE_STUDENT");
+        if (dbStudent.isPresent()) {
+
+            User temporaryStudent = dbStudent.get();
+            if (student.getFirstName() != null) temporaryStudent.setFirstName(student.getFirstName());
+            if (student.getLastName() != null) temporaryStudent.setLastName(student.getLastName());
+            if (student.getMail() != null) temporaryStudent.setMail(student.getMail());
+            if (student.getPassword() != null) temporaryStudent.setPassword(student.getPassword());
+
+            return userRepository.save(temporaryStudent);
+        }
+
+        throw new UserNotFoundException(student.getId());
     }
 
     @Override
     public void deleteStudent(int id) throws NoSuchElementException, UserNotFoundException {
-        Optional<Student> student = studentRepository.findById(id);
+        Optional<User> student = userRepository.findByIdAndAuthority(id, "ROLE_STUDENT");
         if (student.isPresent()) {
-            studentRepository.delete(student.get());
+            userRepository.delete(student.get());
             return;
         }
 

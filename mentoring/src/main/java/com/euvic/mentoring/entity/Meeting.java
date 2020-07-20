@@ -5,7 +5,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 @Entity
-@Table(name = "meeting")
+@Table(name = "meetings")
 public class Meeting {
 
     private static final long serialVersionUID = 1L;
@@ -26,25 +26,24 @@ public class Meeting {
 
     @ManyToOne(cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
     @JoinColumn(name = "mentor_id")
-    private Mentor mentor;
+    private User mentor;
 
     @ManyToOne(cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
     @JoinColumn(name = "student_id")
-    private Student student;
+    private User student;
 
     public Meeting() {
 
     }
 
-    public Meeting(LocalDate date, LocalTime startTime, LocalTime endTime, Mentor mentor) {
+    public Meeting(LocalDate date, LocalTime startTime, LocalTime endTime, User mentor) {
         this.date = date;
         this.startTime = startTime;
         this.endTime = endTime;
         this.mentor = mentor;
     }
 
-    public Meeting(LocalDate date, LocalTime startTime, LocalTime endTime, Mentor mentor, Student student) {
-        this.id = id;
+    public Meeting(LocalDate date, LocalTime startTime, LocalTime endTime, User mentor, User student) {
         this.date = date;
         this.startTime = startTime;
         this.endTime = endTime;
@@ -84,19 +83,19 @@ public class Meeting {
         this.endTime = endTime;
     }
 
-    public Mentor getMentor() {
+    public User getMentor() {
         return mentor;
     }
 
-    public void setMentor(Mentor mentor) {
+    public void setMentor(User mentor) {
         this.mentor = mentor;
     }
 
-    public Student getStudent() {
+    public User getStudent() {
         return student;
     }
 
-    public void setStudent(Student student) {
+    public void setStudent(User student) {
         this.student = student;
     }
 

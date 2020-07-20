@@ -3,9 +3,8 @@ package com.euvic.mentoring.service;
 import com.euvic.mentoring.aspect.MeetingNotFoundException;
 import com.euvic.mentoring.aspect.UserNotFoundException;
 import com.euvic.mentoring.entity.Meeting;
-import com.euvic.mentoring.entity.Mentor;
 import com.euvic.mentoring.entity.MeetingDetails;
-import com.euvic.mentoring.entity.Student;
+import com.euvic.mentoring.entity.User;
 import com.euvic.mentoring.repository.MeetingRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -62,8 +61,8 @@ public class MeetingService implements IMeetingService {
     public MeetingDetails saveMeeting(MeetingDetails meetingDetails) throws MeetingNotFoundException, UserNotFoundException {
 
         Meeting meeting;
-        Mentor mentor = userService.getMentor();
-        Student student = null;
+        User mentor = userService.getMentor();
+        User student = null;
 
         if (meetingDetails.getStudentId() != null) {
             student = userService.getStudent(meetingDetails.getStudentId());

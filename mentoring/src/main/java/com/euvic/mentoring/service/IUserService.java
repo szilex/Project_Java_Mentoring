@@ -1,17 +1,17 @@
 package com.euvic.mentoring.service;
 
 import com.euvic.mentoring.aspect.UserNotFoundException;
-import com.euvic.mentoring.entity.Mentor;
-import com.euvic.mentoring.entity.Student;
+import com.euvic.mentoring.entity.User;
 
 import java.util.List;
 
 public interface IUserService {
 
-    Mentor getMentor() throws UserNotFoundException;
-    Mentor getMentor(int id) throws UserNotFoundException;
-    Student getStudent(int id) throws UserNotFoundException;
-    List<Student> getStudents();
-    Student saveStudent(Student student);
+    User getMentor() throws UserNotFoundException;
+    User getMentor(int id) throws UserNotFoundException;
+    User getStudent(int id) throws UserNotFoundException;
+    List<User> getStudents();
+    User saveStudent(User student);
+    User updateStudent(User student) throws UserNotFoundException;
     void deleteStudent(int id) throws UserNotFoundException;
 }
