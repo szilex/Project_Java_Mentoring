@@ -12,5 +12,6 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 
     Optional<User> findFirstByAuthorityOrderByIdAsc(String authority);
     Optional<User> findByIdAndAuthority(int id, String authority);
+    Optional<User> findByMailAndAuthority(String mail, String authority);
     List<User> findAllByAuthority(String authority);
 }

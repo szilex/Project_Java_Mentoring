@@ -20,13 +20,8 @@ public class UserController {
     }
 
     @GetMapping("/mentor")
-    public User getDefaultMentor() throws UserNotFoundException {
+    public User getMentor() throws UserNotFoundException {
         return userService.getMentor();
-    }
-
-    @GetMapping("/mentor/{id}")
-    public User getMentor(@PathVariable int id) throws UserNotFoundException {
-        return userService.getMentor(id);
     }
 
     @GetMapping("/student/{id}")

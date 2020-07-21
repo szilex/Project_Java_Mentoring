@@ -4,7 +4,8 @@ import com.euvic.mentoring.aspect.UserNotFoundException;
 import com.euvic.mentoring.entity.User;
 import com.euvic.mentoring.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -14,7 +15,7 @@ import java.util.Optional;
 @Service
 public class UserService implements IUserService {
 
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
     @Autowired
     public UserService(UserRepository userRepository) {
@@ -33,18 +34,6 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public User getMentor(int id) throws UserNotFoundException {
-
-        Optional<User> mentor = userRepository.findByIdAndAuthority(id, "ROLE_MENTOR");
-        if (mentor.isPresent()) {
-            return mentor.get();
-        }
-
-        throw new UserNotFoundException(id);
-    }
-
-    @Override
-    @PreAuthorize("isAuthenticated()")
     public User getStudent(int id) throws UserNotFoundException {
 
         Optional<User> student = userRepository.findByIdAndAuthority(id, "ROLE_STUDENT");
@@ -56,13 +45,11 @@ public class UserService implements IUserService {
     }
 
     @Override
-    @PreAuthorize("isAuthenticated()")
     public List<User> getStudents() {
         return userRepository.findAllByAuthority("ROLE_STUDENT");
     }
 
     @Override
-    @PreAuthorize("not(isAuthenticated())")
     public User saveStudent(User student) {
         student.setAuthority("ROLE_STUDENT");
         student.setEnabled(1);
@@ -71,11 +58,14 @@ public class UserService implements IUserService {
     }
 
     @Override
-    @PreAuthorize("hasRole('STUDENT')")
     public User updateStudent(User student) throws UserNotFoundException {
 
         Optional<User> dbStudent = userRepository.findByIdAndAuthority(student.getId(), "ROLE_STUDENT");
         if (dbStudent.isPresent()) {
+
+            if (!isInvokedByCorrectUser(student.getId())) {
+                throw new IllegalArgumentException("Students can only update their own credentials");
+            }
 
             User temporaryStudent = dbStudent.get();
             if (student.getFirstName() != null) temporaryStudent.setFirstName(student.getFirstName());
@@ -90,14 +80,30 @@ public class UserService implements IUserService {
     }
 
     @Override
-    @PreAuthorize("hasRole('STUDENT')")
     public void deleteStudent(int id) throws NoSuchElementException, UserNotFoundException {
         Optional<User> student = userRepository.findByIdAndAuthority(id, "ROLE_STUDENT");
         if (student.isPresent()) {
+
+            if (!isInvokedByCorrectUser(id)) {
+                throw new IllegalArgumentException("Students can only delete their own accounts");
+            }
+
             userRepository.delete(student.get());
             return;
         }
 
         throw new UserNotFoundException(id);
+    }
+
+    private boolean isInvokedByCorrectUser(int id) {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        String username = (principal instanceof UserDetails) ? ((UserDetails)principal).getUsername() : principal.toString();
+
+        int currentStudentId = userRepository.findByMailAndAuthority(username, "ROLE_STUDENT").get().getId();
+        if (currentStudentId != id) {
+            return false;
+        }
+
+        return true;
     }
 }

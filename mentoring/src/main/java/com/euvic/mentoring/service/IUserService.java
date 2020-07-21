@@ -8,7 +8,6 @@ import java.util.List;
 public interface IUserService {
 
     User getMentor() throws UserNotFoundException;
-    User getMentor(int id) throws UserNotFoundException;
     User getStudent(int id) throws UserNotFoundException;
     List<User> getStudents();
     User saveStudent(User student);
