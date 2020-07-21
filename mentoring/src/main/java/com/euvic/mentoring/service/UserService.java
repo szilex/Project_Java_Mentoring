@@ -4,6 +4,7 @@ import com.euvic.mentoring.aspect.UserNotFoundException;
 import com.euvic.mentoring.entity.User;
 import com.euvic.mentoring.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -43,6 +44,7 @@ public class UserService implements IUserService {
     }
 
     @Override
+    @PreAuthorize("isAuthenticated()")
     public User getStudent(int id) throws UserNotFoundException {
 
         Optional<User> student = userRepository.findByIdAndAuthority(id, "ROLE_STUDENT");
@@ -54,11 +56,13 @@ public class UserService implements IUserService {
     }
 
     @Override
+    @PreAuthorize("isAuthenticated()")
     public List<User> getStudents() {
         return userRepository.findAllByAuthority("ROLE_STUDENT");
     }
 
     @Override
+    @PreAuthorize("not(isAuthenticated())")
     public User saveStudent(User student) {
         student.setAuthority("ROLE_STUDENT");
         student.setEnabled(1);
@@ -67,6 +71,7 @@ public class UserService implements IUserService {
     }
 
     @Override
+    @PreAuthorize("hasRole('STUDENT')")
     public User updateStudent(User student) throws UserNotFoundException {
 
         Optional<User> dbStudent = userRepository.findByIdAndAuthority(student.getId(), "ROLE_STUDENT");
@@ -85,6 +90,7 @@ public class UserService implements IUserService {
     }
 
     @Override
+    @PreAuthorize("hasRole('STUDENT')")
     public void deleteStudent(int id) throws NoSuchElementException, UserNotFoundException {
         Optional<User> student = userRepository.findByIdAndAuthority(id, "ROLE_STUDENT");
         if (student.isPresent()) {

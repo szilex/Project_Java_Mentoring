@@ -13,7 +13,7 @@ import java.util.List;
 @RequestMapping("/meeting")
 public class MeetingController {
 
-    private IMeetingService meetingService;
+    private final IMeetingService meetingService;
 
     @Autowired
     public MeetingController(IMeetingService meetingService) {
@@ -36,7 +36,7 @@ public class MeetingController {
     }
 
     @PostMapping
-    public MeetingDetails addMeeting(@RequestBody MeetingDetails meeting) throws MeetingNotFoundException, UserNotFoundException {
+    public MeetingDetails addMeeting(@RequestBody MeetingDetails meeting) throws UserNotFoundException {
         return meetingService.saveMeeting(meeting);
     }
 

@@ -12,7 +12,7 @@ import java.util.List;
 @RequestMapping("/user")
 public class UserController {
 
-    private IUserService userService;
+    private final IUserService userService;
 
     @Autowired
     public UserController(IUserService userService) {
@@ -52,10 +52,5 @@ public class UserController {
     @DeleteMapping("/student/{id}")
     public void deleteStudent(@PathVariable int id) throws UserNotFoundException {
         userService.deleteStudent(id);
-    }
-
-    @GetMapping("/test")
-    public String anything() {
-        return "yay";
     }
 }
