@@ -7,23 +7,31 @@ import com.euvic.mentoring.entity.MeetingDetails;
 import com.euvic.mentoring.entity.User;
 import com.euvic.mentoring.repository.MeetingRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import javax.mail.MessagingException;
 import javax.transaction.Transactional;
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static java.time.temporal.ChronoUnit.MINUTES;
 
 @Service
 public class MeetingService implements IMeetingService {
 
     private MeetingRepository meetingRepository;
     private IUserService userService;
+    private IMailService mailService;
 
     @Autowired
-    public MeetingService(MeetingRepository meetingRepository, IUserService userService) {
+    public MeetingService(MeetingRepository meetingRepository, IUserService userService, IMailService mailService) {
         this.meetingRepository = meetingRepository;
         this.userService = userService;
+        this.mailService = mailService;
     }
 
     @Override
@@ -64,6 +72,10 @@ public class MeetingService implements IMeetingService {
             throw new IllegalArgumentException("Illegal argument specified");
         }
 
+        if (!Duration.between(meetingDetails.getStartTime(), meetingDetails.getEndTime()).equals(Duration.of(15, MINUTES))) {
+            throw new IllegalArgumentException("Time interval must be equal to 15 minutes");
+        }
+
         Optional<Meeting> dbMeeting = meetingRepository.findById(meetingDetails.getId());
         if (dbMeeting.isPresent()) {
             throw new IllegalArgumentException("Meeting with specified id already exists: " + meetingDetails.getId());
@@ -84,6 +96,18 @@ public class MeetingService implements IMeetingService {
             throw new IllegalArgumentException("Insufficient argument list");
         }
 
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        String username = (principal instanceof UserDetails) ? ((UserDetails)principal).getUsername() : principal.toString();
+
+        Integer loggedStudentId = userService.getStudents().stream()
+                .filter(x->x.getMail().equals(username))
+                .map(x->x.getId())
+                .findFirst()
+                .get();
+        if (loggedStudentId != meetingDetails.getStudentId()) {
+            throw new IllegalArgumentException("Student cannot book a meeting for another student");
+        }
+
         Optional<Meeting> dbMeeting = meetingRepository.findById(meetingDetails.getId());
         if (!dbMeeting.isPresent()) {
             throw new MeetingNotFoundException(meetingDetails.getId());
@@ -98,6 +122,13 @@ public class MeetingService implements IMeetingService {
         temporaryMeeting.setStudent(student);
         Meeting savedMeeting = meetingRepository.save(temporaryMeeting);
 
+        try {
+            sendMessageToStudent(savedMeeting);
+            sendMessageToMentor(savedMeeting);
+        } catch (MessagingException e) {
+
+        }
+
         return new MeetingDetails(savedMeeting);
     }
 
@@ -111,5 +142,25 @@ public class MeetingService implements IMeetingService {
         } else {
             throw new MeetingNotFoundException();
         }
+    }
+
+    private void sendMessageToStudent(Meeting meeting) throws MessagingException {
+        StringBuilder message = new StringBuilder();
+        message.append("Hello!\n\n");
+        message.append("You've booked a meeting at:\n\n");
+        message.append("Date: ").append(meeting.getDate().toString()).append('\n');
+        message.append("Time: ").append(meeting.getStartTime()).append('-').append(meeting.getEndTime().toString()).append("\n\n");
+        message.append("Note: This message was generated automatically by Spring Boot Mentoring Application\n");
+        mailService.sendMail(meeting.getStudent().getMail(), "Meeting reservation", message.toString(), false);
+    }
+
+    private void sendMessageToMentor(Meeting meeting) throws MessagingException {
+        StringBuilder message = new StringBuilder();
+        message.append("Hello!\n\n");
+        message.append("Student: ").append(meeting.getStudent().getFirstName()).append(' ').append(meeting.getStudent().getLastName()).append(" booked a meeting at:\n\n");
+        message.append("Date: ").append(meeting.getDate().toString()).append('\n');
+        message.append("Time: ").append(meeting.getStartTime()).append('-').append(meeting.getEndTime().toString()).append("\n\n");
+        message.append("Note: This message was generated automatically by Spring Boot Mentoring Application\n");
+        mailService.sendMail(meeting.getMentor().getMail(), "Meeting reservation", message.toString(), false);
     }
 }

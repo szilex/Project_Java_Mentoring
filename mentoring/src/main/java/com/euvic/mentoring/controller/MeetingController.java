@@ -36,7 +36,7 @@ public class MeetingController {
     }
 
     @PostMapping
-    public MeetingDetails addMeeting(@RequestBody MeetingDetails meeting) throws UserNotFoundException {
+    public MeetingDetails saveMeeting(@RequestBody MeetingDetails meeting) throws UserNotFoundException {
         return meetingService.saveMeeting(meeting);
     }
 
