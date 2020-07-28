@@ -9,6 +9,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.savedrequest.NullRequestCache;
 
 import javax.sql.DataSource;
@@ -20,11 +21,13 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     private final DataSource dataSource;
     private final CustomBasicAuthenticationEntryPoint authenticationEntryPoint;
+    private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public SecurityConfiguration(DataSource dataSource, CustomBasicAuthenticationEntryPoint authenticationEntryPoint) {
+    public SecurityConfiguration(DataSource dataSource, CustomBasicAuthenticationEntryPoint authenticationEntryPoint, PasswordEncoder passwordEncoder) {
         this.dataSource = dataSource;
         this.authenticationEntryPoint = authenticationEntryPoint;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Autowired
@@ -32,7 +35,8 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         authenticationManagerBuilder.jdbcAuthentication()
                 .dataSource(dataSource)
                 .usersByUsernameQuery("SELECT mail, password, enabled FROM users WHERE mail=?")
-                .authoritiesByUsernameQuery("SELECT mail, authority FROM users WHERE mail=?");
+                .authoritiesByUsernameQuery("SELECT mail, authority FROM users WHERE mail=?")
+                .passwordEncoder(passwordEncoder);
     }
 
     @Override

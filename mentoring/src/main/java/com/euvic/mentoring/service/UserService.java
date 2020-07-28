@@ -6,6 +6,7 @@ import com.euvic.mentoring.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -53,6 +54,8 @@ public class UserService implements IUserService {
     public User saveStudent(User student) {
         student.setAuthority("ROLE_STUDENT");
         student.setEnabled(1);
+        String encodedPassword = new BCryptPasswordEncoder().encode(student.getPassword());
+        student.setPassword(encodedPassword);
 
         return userRepository.save(student);
     }
