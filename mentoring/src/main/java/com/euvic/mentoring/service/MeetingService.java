@@ -3,9 +3,10 @@ package com.euvic.mentoring.service;
 import com.euvic.mentoring.aspect.MeetingNotFoundException;
 import com.euvic.mentoring.aspect.UserNotFoundException;
 import com.euvic.mentoring.entity.Meeting;
-import com.euvic.mentoring.entity.MeetingDetails;
+import com.euvic.mentoring.entity.MeetingDTO;
 import com.euvic.mentoring.entity.User;
 import com.euvic.mentoring.repository.MeetingRepository;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -26,71 +27,76 @@ public class MeetingService implements IMeetingService {
     private MeetingRepository meetingRepository;
     private IUserService userService;
     private IMailService mailService;
+    private ModelMapper modelMapper;
 
     @Autowired
-    public MeetingService(MeetingRepository meetingRepository, IUserService userService, IMailService mailService) {
+    public MeetingService(MeetingRepository meetingRepository, IUserService userService, IMailService mailService, ModelMapper modelMapper) {
         this.meetingRepository = meetingRepository;
         this.userService = userService;
         this.mailService = mailService;
+        this.modelMapper = modelMapper;
+
+        this.modelMapper.typeMap(Meeting.class, MeetingDTO.class).addMappings(mapper -> {
+            mapper.map(src -> src.getMentor().getId(), MeetingDTO::setMentorId);
+            mapper.map(src -> src.getStudent().getId(), MeetingDTO::setStudentId);
+        });
     }
 
     @Override
-    public MeetingDetails getMeeting(int id) throws MeetingNotFoundException {
+    public MeetingDTO getMeeting(int id) throws MeetingNotFoundException {
 
         Optional<Meeting> meeting = meetingRepository.findById(id);
         if (meeting.isPresent()) {
-            return new MeetingDetails(meeting.get());
+            return convertToDTO(meeting.get());
         }
 
         throw new MeetingNotFoundException(id);
     }
 
     @Override
-    public List<MeetingDetails> getMeetings() {
+    public List<MeetingDTO> getMeetings() {
 
         List<Meeting> meetings = meetingRepository.findAll();
         return meetings.stream()
-                .map(meeting -> new MeetingDetails(meeting))
+                .map(meeting -> convertToDTO(meeting))
                 .collect(Collectors.toList());
 
     }
 
     @Override
-    public List<MeetingDetails> getStudentMeetings(int id) throws UserNotFoundException {
+    public List<MeetingDTO> getStudentMeetings(int id) throws UserNotFoundException {
 
         List<Meeting> meetings = meetingRepository.findByStudent(userService.getStudent(id));
         return meetings.stream()
-                .map(meeting -> new MeetingDetails(meeting))
+                .map(meeting -> convertToDTO(meeting))
                 .collect(Collectors.toList());
     }
 
     @Override
     @Transactional
-    public MeetingDetails saveMeeting(MeetingDetails meetingDetails) throws UserNotFoundException {
+    public MeetingDTO saveMeeting(MeetingDTO meetingDTO) throws UserNotFoundException {
 
-        if (meetingDetails.getId() != 0 && meetingDetails.getStudentId() != 0) {
+        if (meetingDTO.getId() != 0 || meetingDTO.getMentorId() != 0 || meetingDTO.getStudentId() != 0) {
             throw new IllegalArgumentException("Illegal argument specified");
         }
 
-        if (!Duration.between(meetingDetails.getStartTime(), meetingDetails.getEndTime()).equals(Duration.of(15, MINUTES))) {
+        if (!Duration.between(meetingDTO.getStartTime(), meetingDTO.getEndTime()).equals(Duration.of(15, MINUTES))) {
             throw new IllegalArgumentException("Time interval must be equal to 15 minutes");
         }
 
-        Optional<Meeting> dbMeeting = meetingRepository.findById(meetingDetails.getId());
-        if (dbMeeting.isPresent()) {
-            throw new IllegalArgumentException("Meeting with specified id already exists: " + meetingDetails.getId());
-        }
+        //Meeting meeting = new Meeting(meetingDTO.getDate(), meetingDTO.getStartTime(), meetingDTO.getEndTime(), userService.getMentor(), null);
+        Meeting meeting = convertToEntity(meetingDTO);
+        meeting.setMentor(userService.getMentor());
+        meeting.setStudent(null);
 
-        User mentor = userService.getMentor();
-        Meeting meeting = new Meeting(meetingDetails.getDate(), meetingDetails.getStartTime(), meetingDetails.getEndTime(), mentor, null);
         Meeting savedMeeting = meetingRepository.save(meeting);
 
-        return new MeetingDetails(savedMeeting);
+        return new MeetingDTO(savedMeeting);
     }
 
     @Override
     @Transactional
-    public MeetingDetails updateMeeting(MeetingDetails meetingDetails) throws UserNotFoundException, MeetingNotFoundException {
+    public MeetingDTO updateMeeting(MeetingDTO meetingDetails) throws UserNotFoundException, MeetingNotFoundException {
 
         if (meetingDetails.getId() == 0 || meetingDetails.getStudentId() == 0) {
             throw new IllegalArgumentException("Insufficient argument list");
@@ -99,12 +105,11 @@ public class MeetingService implements IMeetingService {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         String username = (principal instanceof UserDetails) ? ((UserDetails)principal).getUsername() : principal.toString();
 
-        Integer loggedStudentId = userService.getStudents().stream()
+        User loggedStudent = userService.getStudents().stream()
                 .filter(x->x.getMail().equals(username))
-                .map(x->x.getId())
                 .findFirst()
                 .get();
-        if (loggedStudentId != meetingDetails.getStudentId()) {
+        if (loggedStudent.getId() != meetingDetails.getStudentId()) {
             throw new IllegalArgumentException("Student cannot book a meeting for another student");
         }
 
@@ -115,21 +120,18 @@ public class MeetingService implements IMeetingService {
 
         Meeting temporaryMeeting = dbMeeting.get();
         if(temporaryMeeting.getStudent() != null) {
-            throw new IllegalArgumentException("Meeting with specified id is already reserved: " + meetingDetails.getId());
+            throw new IllegalArgumentException("Meeting with specified id is already booked: " + meetingDetails.getId());
         }
 
-        User student = userService.getStudent(meetingDetails.getStudentId());
-        temporaryMeeting.setStudent(student);
+        temporaryMeeting.setStudent(loggedStudent);
         Meeting savedMeeting = meetingRepository.save(temporaryMeeting);
 
         try {
             sendMessageToStudent(savedMeeting);
             sendMessageToMentor(savedMeeting);
-        } catch (MessagingException e) {
+        } catch (MessagingException e) { }
 
-        }
-
-        return new MeetingDetails(savedMeeting);
+        return convertToDTO(savedMeeting);
     }
 
     @Override
@@ -162,5 +164,17 @@ public class MeetingService implements IMeetingService {
         message.append("Time: ").append(meeting.getStartTime()).append('-').append(meeting.getEndTime().toString()).append("\n\n");
         message.append("Note: This message was generated automatically by Spring Boot Mentoring Application\n");
         mailService.sendMail(meeting.getMentor().getMail(), "Meeting reservation", message.toString(), false);
+    }
+
+    private MeetingDTO convertToDTO(Meeting meeting) {
+        MeetingDTO meetingDTO = modelMapper.map(meeting, MeetingDTO.class);
+
+        return meetingDTO;
+    }
+
+    private Meeting convertToEntity(MeetingDTO meetingDTO) {
+        Meeting meeting = modelMapper.map(meetingDTO, Meeting.class);
+
+        return meeting;
     }
 }
