@@ -50,6 +50,16 @@ public class User {
         this.lastName = lastName;
     }
 
+    public User(int id, String mail, String password, String authority, int enabled, String firstName, String lastName) {
+        this.id = id;
+        this.mail = mail;
+        this.password = password;
+        this.authority = authority;
+        this.enabled = enabled;
+        this.firstName = firstName;
+        this.lastName = lastName;
+    }
+
     public int getId() {
         return id;
     }

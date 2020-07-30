@@ -24,10 +24,10 @@ import static java.time.temporal.ChronoUnit.MINUTES;
 @Service
 public class MeetingService implements IMeetingService {
 
-    private MeetingRepository meetingRepository;
-    private IUserService userService;
-    private IMailService mailService;
-    private ModelMapper modelMapper;
+    private final MeetingRepository meetingRepository;
+    private final IUserService userService;
+    private final IMailService mailService;
+    private final ModelMapper modelMapper;
 
     @Autowired
     public MeetingService(MeetingRepository meetingRepository, IUserService userService, IMailService mailService, ModelMapper modelMapper) {
@@ -58,7 +58,7 @@ public class MeetingService implements IMeetingService {
 
         List<Meeting> meetings = meetingRepository.findAll();
         return meetings.stream()
-                .map(meeting -> convertToDTO(meeting))
+                .map(this::convertToDTO)
                 .collect(Collectors.toList());
 
     }
@@ -68,7 +68,7 @@ public class MeetingService implements IMeetingService {
 
         List<Meeting> meetings = meetingRepository.findByStudent(userService.getStudent(id));
         return meetings.stream()
-                .map(meeting -> convertToDTO(meeting))
+                .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
 
@@ -114,7 +114,7 @@ public class MeetingService implements IMeetingService {
         }
 
         Optional<Meeting> dbMeeting = meetingRepository.findById(meetingDetails.getId());
-        if (!dbMeeting.isPresent()) {
+        if (dbMeeting.isEmpty()) {
             throw new MeetingNotFoundException(meetingDetails.getId());
         }
 
@@ -147,34 +147,39 @@ public class MeetingService implements IMeetingService {
     }
 
     private void sendMessageToStudent(Meeting meeting) throws MessagingException {
-        StringBuilder message = new StringBuilder();
-        message.append("Hello!\n\n");
-        message.append("You've booked a meeting at:\n\n");
-        message.append("Date: ").append(meeting.getDate().toString()).append('\n');
-        message.append("Time: ").append(meeting.getStartTime()).append('-').append(meeting.getEndTime().toString()).append("\n\n");
-        message.append("Note: This message was generated automatically by Spring Boot Mentoring Application\n");
-        mailService.sendMail(meeting.getStudent().getMail(), "Meeting reservation", message.toString(), false);
+        String message = createMessage(meeting, "Student");
+        mailService.sendMail(meeting.getStudent().getMail(), "Meeting reservation", message, false);
     }
 
     private void sendMessageToMentor(Meeting meeting) throws MessagingException {
+        String message = createMessage(meeting, "Mentor");
+        mailService.sendMail(meeting.getMentor().getMail(), "Meeting reservation", message, false);
+    }
+
+    private String createMessage(Meeting meeting, String userType) {
         StringBuilder message = new StringBuilder();
         message.append("Hello!\n\n");
-        message.append("Student: ").append(meeting.getStudent().getFirstName()).append(' ').append(meeting.getStudent().getLastName()).append(" booked a meeting at:\n\n");
+        switch(userType) {
+            case "Mentor" :
+                message.append("Student: ").append(meeting.getStudent().getFirstName()).append(' ').append(meeting.getStudent().getLastName()).append(" booked a meeting at:\n\n");
+                break;
+            case "Student" :
+                message.append("You've booked a meeting at:\n\n");
+                break;
+            default:
+                message.append("Meeting details:");
+        }
         message.append("Date: ").append(meeting.getDate().toString()).append('\n');
         message.append("Time: ").append(meeting.getStartTime()).append('-').append(meeting.getEndTime().toString()).append("\n\n");
         message.append("Note: This message was generated automatically by Spring Boot Mentoring Application\n");
-        mailService.sendMail(meeting.getMentor().getMail(), "Meeting reservation", message.toString(), false);
+        return message.toString();
     }
 
     private MeetingDTO convertToDTO(Meeting meeting) {
-        MeetingDTO meetingDTO = modelMapper.map(meeting, MeetingDTO.class);
-
-        return meetingDTO;
+        return modelMapper.map(meeting, MeetingDTO.class);
     }
 
     private Meeting convertToEntity(MeetingDTO meetingDTO) {
-        Meeting meeting = modelMapper.map(meetingDTO, Meeting.class);
-
-        return meeting;
+        return modelMapper.map(meetingDTO, Meeting.class);
     }
 }

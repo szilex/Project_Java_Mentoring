@@ -1,7 +1,5 @@
 package com.euvic.mentoring.controller;
 
-import com.euvic.mentoring.aspect.MeetingNotFoundException;
-import com.euvic.mentoring.aspect.UserNotFoundException;
 import com.euvic.mentoring.entity.MeetingDTO;
 import com.euvic.mentoring.service.IMeetingService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +19,7 @@ public class MeetingController {
     }
 
     @GetMapping("/{id}")
-    public MeetingDTO getMeeting(@PathVariable int id) throws MeetingNotFoundException {
+    public MeetingDTO getMeeting(@PathVariable int id) {
         return meetingService.getMeeting(id);
     }
 
@@ -31,22 +29,22 @@ public class MeetingController {
     }
 
     @GetMapping("/student/{id}")
-    public List<MeetingDTO> getStudentMeetings(@PathVariable int id) throws UserNotFoundException {
+    public List<MeetingDTO> getStudentMeetings(@PathVariable int id) {
         return meetingService.getStudentMeetings(id);
     }
 
     @PostMapping
-    public MeetingDTO saveMeeting(@RequestBody MeetingDTO meeting) throws UserNotFoundException {
+    public MeetingDTO saveMeeting(@RequestBody MeetingDTO meeting) {
         return meetingService.saveMeeting(meeting);
     }
 
     @PutMapping
-    public MeetingDTO updateMeeting(@RequestBody MeetingDTO meeting) throws MeetingNotFoundException, UserNotFoundException {
+    public MeetingDTO updateMeeting(@RequestBody MeetingDTO meeting) {
         return meetingService.updateMeeting(meeting);
     }
 
     @DeleteMapping("/{id}")
-    public void deleteMeeting(@PathVariable int id) throws MeetingNotFoundException {
+    public void deleteMeeting(@PathVariable int id) {
         meetingService.deleteMeeting(id);
     }
 }

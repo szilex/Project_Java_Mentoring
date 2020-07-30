@@ -1,6 +1,6 @@
 package com.euvic.mentoring.aspect;
 
-public class UserNotFoundException extends Exception {
+public class UserNotFoundException extends RuntimeException {
 
     private int userId;
 

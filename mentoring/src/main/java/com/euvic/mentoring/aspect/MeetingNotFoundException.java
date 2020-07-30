@@ -1,6 +1,6 @@
 package com.euvic.mentoring.aspect;
 
-public class MeetingNotFoundException extends Exception {
+public class MeetingNotFoundException extends RuntimeException {
 
     private int userId;
 

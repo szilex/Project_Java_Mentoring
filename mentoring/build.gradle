@@ -25,13 +25,16 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.hibernate:hibernate-java8:6.0.0.Alpha5'
 	implementation 'org.modelmapper:modelmapper:2.3.0'
+	implementation 'junit:junit:4.12'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	runtimeOnly 'mysql:mysql-connector-java'
 	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 	testImplementation('org.springframework.boot:spring-boot-starter-test') {
 		exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
 	}
+	testCompile 'org.junit.jupiter:junit-jupiter:5.5.2'
 	testImplementation 'org.springframework.security:spring-security-test'
+	testCompile("com.h2database:h2:1.4.191")
 }
 
 test {
