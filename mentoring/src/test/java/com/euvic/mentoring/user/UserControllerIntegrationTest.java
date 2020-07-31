@@ -37,7 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 )
 @AutoConfigureMockMvc
 @TestPropertySource(locations = "classpath:application-userintegrationtest.properties")
-public class UserControllerTest {
+public class UserControllerIntegrationTest {
 
     @Autowired
     private WebApplicationContext context;
@@ -71,7 +71,7 @@ public class UserControllerTest {
 
     @Test
     @WithMockUser(username = "user@email.com", password = "pass123", authorities = {"ROLE_MENTOR"})
-    void given_UserLoggedAsMentor_when_GetMentor_then_ReturnMentor() throws Exception {
+    void givenUserLoggedAsMentor_whenGetMentor_thenReturnMentor() throws Exception {
 
         when(userService.getMentor()).thenReturn(mentorToReturn);
 
@@ -84,7 +84,7 @@ public class UserControllerTest {
 
     @Test
     @WithMockUser(username = "user@email.com", password = "pass123", authorities = {"ROLE_STUDENT"})
-    void given_UserLoggedAsStudent_when_GetMentor_then_Return403Forbidden() throws Exception {
+    void givenUserLoggedAsStudent_whenGetMentor_thenReturn403Forbidden() throws Exception {
 
         when(userService.getMentor()).thenReturn(mentorToReturn);
 
@@ -95,7 +95,7 @@ public class UserControllerTest {
 
     @Test
     @WithAnonymousUser
-    void given_UserIsUnauthorized_when_GetMentor_then_Return401Unauthorized() throws Exception {
+    void givenUserIsUnauthorized_whenGetMentor_thenReturn401Unauthorized() throws Exception {
 
         when(userService.getMentor()).thenReturn(mentorToReturn);
 
@@ -106,7 +106,7 @@ public class UserControllerTest {
 
     @Test
     @WithMockUser(username = "user@email.com", password = "pass123", authorities = {"ROLE_MENTOR"})
-    void given_UserLoggedAsMentor_when_GetStudent_then_ReturnStudent() throws Exception {
+    void givenUserLoggedAsMentor_whenGetStudent_thenReturnStudent() throws Exception {
 
         when(userService.getStudent(2)).thenReturn(studentsToReturn.get(0));
 
@@ -119,7 +119,7 @@ public class UserControllerTest {
 
     @Test
     @WithMockUser(username = "user@email.com", password = "pass123", authorities = {"ROLE_STUDENT"})
-    void given_UserLoggedAsStudent_when_GetStudent_then_ReturnStudent() throws Exception {
+    void givenUserLoggedAsStudent_whenGetStudent_thenReturnStudent() throws Exception {
 
         when(userService.getStudent(2)).thenReturn(studentsToReturn.get(0));
 
@@ -132,7 +132,7 @@ public class UserControllerTest {
 
     @Test
     @WithAnonymousUser
-    void given_UserIsAnonymous_when_GetStudent_then_Return401Unauthorized() throws Exception {
+    void givenUserIsAnonymous_whenGetStudent_thenReturn401Unauthorized() throws Exception {
 
         when(userService.getStudent(2)).thenReturn(studentsToReturn.get(0));
 
@@ -143,7 +143,7 @@ public class UserControllerTest {
 
     @Test
     @WithMockUser(username = "user@email.com", password = "pass123", authorities = {"ROLE_MENTOR"})
-    void given_UserLoggedAsMentor_when_GetStudents_then_ReturnStudents() throws Exception {
+    void givenUserLoggedAsMentor_whenGetStudents_thenReturnStudents() throws Exception {
 
         when(userService.getStudents()).thenReturn(studentsToReturn);
 
@@ -158,7 +158,7 @@ public class UserControllerTest {
 
     @Test
     @WithMockUser(username = "user@email.com", password = "pass123", authorities = {"ROLE_STUDENT"})
-    void given_UserLoggedAsStudent_when_GetStudents_then_ReturnStudents() throws Exception {
+    void givenUserLoggedAsStudent_whenGetStudents_thenReturnStudents() throws Exception {
 
         when(userService.getStudents()).thenReturn(studentsToReturn);
 
@@ -173,7 +173,7 @@ public class UserControllerTest {
 
     @Test
     @WithAnonymousUser
-    void given_UserIsAnonymous_when_GetStudents_then_Return401Unauthorized() throws Exception {
+    void givenUserIsAnonymous_whenGetStudents_thenReturn401Unauthorized() throws Exception {
 
         when(userService.getStudents()).thenReturn(studentsToReturn);
 
@@ -184,7 +184,7 @@ public class UserControllerTest {
 
     @Test
     @WithMockUser(username = "user@email.com", password = "pass123", authorities = {"ROLE_MENTOR"})
-    void given_UserLoggedAsMentor_when_PostStudent_then_Return403Forbidden() throws Exception {
+    void givenUserLoggedAsMentor_whenPostStudent_thenReturn403Forbidden() throws Exception {
 
         User studentToSave = new User(5, "laurenmoriz@email.com", "pass123", "ROLE_STUDENT", 1, "Lauren", "Moriz" );
 
@@ -199,7 +199,7 @@ public class UserControllerTest {
 
     @Test
     @WithMockUser(username = "user@email.com", password = "pass123", authorities = {"ROLE_STUDENT"})
-    void given_UserLoggedAsStudent_when_PostStudent_then_Return403Forbidden() throws Exception {
+    void givenUserLoggedAsStudent_whenPostStudent_thenReturn403Forbidden() throws Exception {
 
         User studentToSave = new User(5, "laurenmoriz@email.com", "pass123", "ROLE_STUDENT", 1, "Lauren", "Moriz" );
 
@@ -214,7 +214,7 @@ public class UserControllerTest {
 
     @Test
     @WithAnonymousUser
-    void given_UserIsAnonymous_when_PostStudent_then_CreateAndReturnStudent() throws Exception {
+    void givenUserIsAnonymous_whenPostStudent_thenCreateAndReturnStudent() throws Exception {
 
         User studentToSave = new User(5, "laurenmoriz@email.com", "pass123", "ROLE_STUDENT", 1, "Lauren", "Moriz" );
 
@@ -231,7 +231,7 @@ public class UserControllerTest {
 
     @Test
     @WithMockUser(username = "user@email.com", password = "pass123", authorities = {"ROLE_MENTOR"})
-    void given_UserLoggedAsMentor_when_UpdateStudent_then_Return403Forbidden() throws Exception {
+    void givenUserLoggedAsMentor_whenUpdateStudent_thenReturn403Forbidden() throws Exception {
 
         User studentToUpdate = new User(5, "laurenmoriz@email.com", "pass123", "ROLE_STUDENT", 1, "Lauren", "Moriz" );
 
@@ -246,7 +246,7 @@ public class UserControllerTest {
 
     @Test
     @WithMockUser(username = "user@email.com", password = "pass123", authorities = {"ROLE_STUDENT"})
-    void given_UserLoggedAsStudent_when_UpdateStudent_then_UpdateAndReturnStudent() throws Exception {
+    void givenUserLoggedAsStudent_whenUpdateStudent_thenUpdateAndReturnStudent() throws Exception {
 
         User studentToUpdate = new User(5, "laurenmoriz@email.com", "pass123", "ROLE_STUDENT", 1, "Lauren", "Moriz" );
 
@@ -262,7 +262,7 @@ public class UserControllerTest {
 
     @Test
     @WithAnonymousUser
-    void given_UserIsAnonymous_when_UpdateStudent_then_Return403Forbidden() throws Exception {
+    void givenUserIsAnonymous_whenUpdateStudent_thenReturn403Forbidden() throws Exception {
 
         User studentToUpdate = new User(5, "laurenmoriz@email.com", "pass123", "ROLE_STUDENT", 1, "Lauren", "Moriz" );
 
@@ -277,7 +277,7 @@ public class UserControllerTest {
 
     @Test
     @WithMockUser(username = "user@email.com", password = "pass123", authorities = {"ROLE_MENTOR"})
-    void given_UserLoggedAsMentor_when_DeleteStudent_then_Return403Forbidden() throws Exception {
+    void givenUserLoggedAsMentor_whenDeleteStudent_thenReturn403Forbidden() throws Exception {
 
         doNothing().when(userService).deleteStudent(2);
 
@@ -288,7 +288,7 @@ public class UserControllerTest {
 
     @Test
     @WithMockUser(username = "user@email.com", password = "pass123", authorities = {"ROLE_STUDENT"})
-    void given_UserLoggedAsStudent_when_DeleteStudent_then_DeleteStudent() throws Exception {
+    void givenUserLoggedAsStudent_whenDeleteStudent_thenDeleteStudent() throws Exception {
 
         doNothing().when(userService).deleteStudent(2);
 
@@ -299,7 +299,7 @@ public class UserControllerTest {
 
     @Test
     @WithAnonymousUser
-    void given_UserIsAnonymous_when_DeleteStudent_then_Return403Forbidden() throws Exception {
+    void givenUserIsAnonymous_whenDeleteStudent_thenReturn403Forbidden() throws Exception {
 
         doNothing().when(userService).deleteStudent(2);
 
