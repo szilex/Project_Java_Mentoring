@@ -52,6 +52,11 @@ public class UserService implements IUserService {
 
     @Override
     public User saveStudent(User student) {
+
+        if (student == null) {
+            return null;
+        }
+
         student.setAuthority("ROLE_STUDENT");
         student.setEnabled(1);
         String encodedPassword = new BCryptPasswordEncoder().encode(student.getPassword());
@@ -62,6 +67,10 @@ public class UserService implements IUserService {
 
     @Override
     public User updateStudent(User student) throws UserNotFoundException {
+
+        if (student == null) {
+            return null;
+        }
 
         Optional<User> dbStudent = userRepository.findByIdAndAuthority(student.getId(), "ROLE_STUDENT");
         if (dbStudent.isPresent()) {
