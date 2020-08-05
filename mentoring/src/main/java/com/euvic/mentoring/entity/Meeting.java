@@ -51,6 +51,14 @@ public class Meeting {
         this.student = student;
     }
 
+    public Meeting(int id, LocalDate date, LocalTime startTime, LocalTime endTime, User mentor) {
+        this.id = id;
+        this.date = date;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.mentor = mentor;
+    }
+
     public int getId() {
         return id;
     }

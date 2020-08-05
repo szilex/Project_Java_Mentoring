@@ -2,7 +2,8 @@ package com.euvic.mentoring.user;
 
 import com.euvic.mentoring.entity.User;
 import com.euvic.mentoring.repository.UserRepository;
-import org.junit.Test;
+import org.junit.Before;
+import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -24,14 +25,19 @@ public class UserRepositoryIntegrationTest {
     @Autowired
     private UserRepository userRepository;
 
+    @Before
+    public void setup() {
+        testEntityManager.clear();
+    }
+
     @Test
     void givenOneMentor_whenFindFirstByAuthorityMentorOrderByIdAsc_thenReturnMentor() {
 
-        User mentor = new User(1, "johnsmith@email.com", "pass123", "ROLE_MENTOR", 1, "John", "Smith" );
+        User mentor = new User("johnsmith@email.com", "pass123", "ROLE_MENTOR", 1, "John", "Smith" );
         testEntityManager.persist(mentor);
         testEntityManager.flush();
 
-        Optional<User> found = userRepository.findFirstByAuthorityOrderByIdAsc("MENTOR");
+        Optional<User> found = userRepository.findFirstByAuthorityOrderByIdAsc(mentor.getAuthority());
 
         assertThat(found).isNotEmpty();
         assertThat(found.get()).isEqualTo(mentor);
@@ -40,13 +46,13 @@ public class UserRepositoryIntegrationTest {
     @Test
     void givenMultipleMentors_whenFindFirstByAuthorityMentorOrderByIdAsc_thenReturnFirstMentor() {
 
-        User mentor1 = new User(1, "johnsmith@email.com", "pass123", "ROLE_MENTOR", 1, "John", "Smith" );
-        User mentor2 = new User(2, "georgeadams@email.com", "pass123", "ROLE_MENTOR", 1, "George", "Adams" );
+        User mentor1 = new User("johnsmith@email.com", "pass123", "ROLE_MENTOR", 1, "John", "Smith" );
+        User mentor2 = new User("georgeadams@email.com", "pass123", "ROLE_MENTOR", 1, "George", "Adams" );
         testEntityManager.persist(mentor1);
         testEntityManager.persist(mentor2);
         testEntityManager.flush();
 
-        Optional<User> found = userRepository.findFirstByAuthorityOrderByIdAsc("MENTOR");
+        Optional<User> found = userRepository.findFirstByAuthorityOrderByIdAsc(mentor1.getAuthority());
 
         assertThat(found).isNotEmpty();
         assertThat(found.get()).isEqualTo(mentor1);
@@ -55,17 +61,17 @@ public class UserRepositoryIntegrationTest {
     @Test
     void givenMultipleUsers_whenFindFirstByAuthorityMentorOrderByIdAsc_thenReturnFirstMentor() {
 
-        User mentor1 = new User(1, "johnsmith@email.com", "pass123", "ROLE_MENTOR", 1, "John", "Smith" );
-        User mentor2 = new User(2, "georgeadams@email.com", "pass123", "ROLE_MENTOR", 1, "George", "Adams" );
-        User student1 = new User(3, "karenjohns@email.com", "pass123", "ROLE_STUDENT", 1, "Karen", "Johns" );
-        User student2 = new User(4, "monicadaniels@email.com", "pass123", "ROLE_STUDENT", 1, "Monica", "Daniels" );
+        User mentor1 = new User("johnsmith@email.com", "pass123", "ROLE_MENTOR", 1, "John", "Smith" );
+        User mentor2 = new User("georgeadams@email.com", "pass123", "ROLE_MENTOR", 1, "George", "Adams" );
+        User student1 = new User("karenjohns@email.com", "pass123", "ROLE_STUDENT", 1, "Karen", "Johns" );
+        User student2 = new User("monicadaniels@email.com", "pass123", "ROLE_STUDENT", 1, "Monica", "Daniels" );
         testEntityManager.persist(mentor1);
         testEntityManager.persist(mentor2);
         testEntityManager.persist(student1);
         testEntityManager.persist(student2);
         testEntityManager.flush();
 
-        Optional<User> found = userRepository.findFirstByAuthorityOrderByIdAsc("MENTOR");
+        Optional<User> found = userRepository.findFirstByAuthorityOrderByIdAsc(mentor1.getAuthority());
 
         assertThat(found).isNotEmpty();
         assertThat(found.get()).isEqualTo(mentor1);
@@ -74,17 +80,17 @@ public class UserRepositoryIntegrationTest {
     @Test
     void givenMultipleUsers_whenFindByCorrectIdAndCorrectAuthority_thenReturnUser() {
 
-        User mentor1 = new User(1, "johnsmith@email.com", "pass123", "ROLE_MENTOR", 1, "John", "Smith" );
-        User mentor2 = new User(2, "georgeadams@email.com", "pass123", "ROLE_MENTOR", 1, "George", "Adams" );
-        User student1 = new User(3, "karenjohns@email.com", "pass123", "ROLE_STUDENT", 1, "Karen", "Johns" );
-        User student2 = new User(4, "monicadaniels@email.com", "pass123", "ROLE_STUDENT", 1, "Monica", "Daniels" );
-        testEntityManager.persist(mentor1);
+        User mentor1 = new User("johnsmith@email.com", "pass123", "ROLE_MENTOR", 1, "John", "Smith" );
+        User mentor2 = new User("georgeadams@email.com", "pass123", "ROLE_MENTOR", 1, "George", "Adams" );
+        User student1 = new User("karenjohns@email.com", "pass123", "ROLE_STUDENT", 1, "Karen", "Johns" );
+        User student2 = new User("monicadaniels@email.com", "pass123", "ROLE_STUDENT", 1, "Monica", "Daniels" );
+        int mentorId = (int) testEntityManager.persistAndGetId(mentor1);
         testEntityManager.persist(mentor2);
         testEntityManager.persist(student1);
         testEntityManager.persist(student2);
         testEntityManager.flush();
 
-        Optional<User> found = userRepository.findByIdAndAuthority(1, "MENTOR");
+        Optional<User> found = userRepository.findByIdAndAuthority(mentorId, mentor1.getAuthority());
 
         assertThat(found).isNotEmpty();
         assertThat(found.get()).isEqualTo(mentor1);
@@ -93,17 +99,17 @@ public class UserRepositoryIntegrationTest {
     @Test
     void givenMultipleUsers_whenFindByCorrectIdAndIncorrectAuthority_thenReturnEmpty() {
 
-        User mentor1 = new User(1, "johnsmith@email.com", "pass123", "ROLE_MENTOR", 1, "John", "Smith" );
-        User mentor2 = new User(2, "georgeadams@email.com", "pass123", "ROLE_MENTOR", 1, "George", "Adams" );
-        User student1 = new User(3, "karenjohns@email.com", "pass123", "ROLE_STUDENT", 1, "Karen", "Johns" );
-        User student2 = new User(4, "monicadaniels@email.com", "pass123", "ROLE_STUDENT", 1, "Monica", "Daniels" );
+        User mentor1 = new User("johnsmith@email.com", "pass123", "ROLE_MENTOR", 1, "John", "Smith" );
+        User mentor2 = new User("georgeadams@email.com", "pass123", "ROLE_MENTOR", 1, "George", "Adams" );
+        User student1 = new User("karenjohns@email.com", "pass123", "ROLE_STUDENT", 1, "Karen", "Johns" );
+        User student2 = new User("monicadaniels@email.com", "pass123", "ROLE_STUDENT", 1, "Monica", "Daniels" );
         testEntityManager.persist(mentor1);
         testEntityManager.persist(mentor2);
-        testEntityManager.persist(student1);
+        int studentId = (int) testEntityManager.persistAndGetId(student1);
         testEntityManager.persist(student2);
         testEntityManager.flush();
 
-        Optional<User> found = userRepository.findByIdAndAuthority(3, "MENTOR");
+        Optional<User> found = userRepository.findByIdAndAuthority(studentId, mentor1.getAuthority());
 
         assertThat(found).isEmpty();
     }
@@ -111,17 +117,17 @@ public class UserRepositoryIntegrationTest {
     @Test
     void givenMultipleUsers_whenFindByCorrectIdAndNonexistentAuthority_thenReturnEmpty() {
 
-        User mentor1 = new User(1, "johnsmith@email.com", "pass123", "ROLE_MENTOR", 1, "John", "Smith" );
-        User mentor2 = new User(2, "georgeadams@email.com", "pass123", "ROLE_MENTOR", 1, "George", "Adams" );
-        User student1 = new User(3, "karenjohns@email.com", "pass123", "ROLE_STUDENT", 1, "Karen", "Johns" );
-        User student2 = new User(4, "monicadaniels@email.com", "pass123", "ROLE_STUDENT", 1, "Monica", "Daniels" );
+        User mentor1 = new User("johnsmith@email.com", "pass123", "ROLE_MENTOR", 1, "John", "Smith" );
+        User mentor2 = new User("georgeadams@email.com", "pass123", "ROLE_MENTOR", 1, "George", "Adams" );
+        User student1 = new User("karenjohns@email.com", "pass123", "ROLE_STUDENT", 1, "Karen", "Johns" );
+        User student2 = new User("monicadaniels@email.com", "pass123", "ROLE_STUDENT", 1, "Monica", "Daniels" );
         testEntityManager.persist(mentor1);
         testEntityManager.persist(mentor2);
-        testEntityManager.persist(student1);
+        int studentId = (int) testEntityManager.persistAndGetId(student1);
         testEntityManager.persist(student2);
         testEntityManager.flush();
 
-        Optional<User> found = userRepository.findByIdAndAuthority(3, "TEACHER");
+        Optional<User> found = userRepository.findByIdAndAuthority(studentId, "ROLE_TEACHER");
 
         assertThat(found).isEmpty();
     }
@@ -129,35 +135,17 @@ public class UserRepositoryIntegrationTest {
     @Test
     void givenMultipleUsers_whenFindByNonexistentIdAndCorrectAuthority_thenReturnEmpty() {
 
-        User mentor1 = new User(1, "johnsmith@email.com", "pass123", "ROLE_MENTOR", 1, "John", "Smith" );
-        User mentor2 = new User(2, "georgeadams@email.com", "pass123", "ROLE_MENTOR", 1, "George", "Adams" );
-        User student1 = new User(3, "karenjohns@email.com", "pass123", "ROLE_STUDENT", 1, "Karen", "Johns" );
-        User student2 = new User(4, "monicadaniels@email.com", "pass123", "ROLE_STUDENT", 1, "Monica", "Daniels" );
+        User mentor1 = new User("johnsmith@email.com", "pass123", "ROLE_MENTOR", 1, "John", "Smith" );
+        User mentor2 = new User("georgeadams@email.com", "pass123", "ROLE_MENTOR", 1, "George", "Adams" );
+        User student1 = new User("karenjohns@email.com", "pass123", "ROLE_STUDENT", 1, "Karen", "Johns" );
+        User student2 = new User("monicadaniels@email.com", "pass123", "ROLE_STUDENT", 1, "Monica", "Daniels" );
         testEntityManager.persist(mentor1);
         testEntityManager.persist(mentor2);
         testEntityManager.persist(student1);
         testEntityManager.persist(student2);
         testEntityManager.flush();
 
-        Optional<User> found = userRepository.findByIdAndAuthority(5, "MENTOR");
-
-        assertThat(found).isEmpty();
-    }
-
-    @Test
-    void givenMultipleUsers_whenFindByNonexistentIdAndIncorrectAuthority_thenReturnEmpty() {
-
-        User mentor1 = new User(1, "johnsmith@email.com", "pass123", "ROLE_MENTOR", 1, "John", "Smith" );
-        User mentor2 = new User(2, "georgeadams@email.com", "pass123", "ROLE_MENTOR", 1, "George", "Adams" );
-        User student1 = new User(3, "karenjohns@email.com", "pass123", "ROLE_STUDENT", 1, "Karen", "Johns" );
-        User student2 = new User(4, "monicadaniels@email.com", "pass123", "ROLE_STUDENT", 1, "Monica", "Daniels" );
-        testEntityManager.persist(mentor1);
-        testEntityManager.persist(mentor2);
-        testEntityManager.persist(student1);
-        testEntityManager.persist(student2);
-        testEntityManager.flush();
-
-        Optional<User> found = userRepository.findByIdAndAuthority(5, "TEACHER");
+        Optional<User> found = userRepository.findByIdAndAuthority(5489, mentor1.getAuthority());
 
         assertThat(found).isEmpty();
     }
@@ -165,17 +153,17 @@ public class UserRepositoryIntegrationTest {
     @Test
     void givenMultipleUsers_whenFindByNonexistentIdAndNonexistentAuthority_thenReturnEmpty() {
 
-        User mentor1 = new User(1, "johnsmith@email.com", "pass123", "ROLE_MENTOR", 1, "John", "Smith" );
-        User mentor2 = new User(2, "georgeadams@email.com", "pass123", "ROLE_MENTOR", 1, "George", "Adams" );
-        User student1 = new User(3, "karenjohns@email.com", "pass123", "ROLE_STUDENT", 1, "Karen", "Johns" );
-        User student2 = new User(4, "monicadaniels@email.com", "pass123", "ROLE_STUDENT", 1, "Monica", "Daniels" );
+        User mentor1 = new User("johnsmith@email.com", "pass123", "ROLE_MENTOR", 1, "John", "Smith" );
+        User mentor2 = new User("georgeadams@email.com", "pass123", "ROLE_MENTOR", 1, "George", "Adams" );
+        User student1 = new User("karenjohns@email.com", "pass123", "ROLE_STUDENT", 1, "Karen", "Johns" );
+        User student2 = new User("monicadaniels@email.com", "pass123", "ROLE_STUDENT", 1, "Monica", "Daniels" );
         testEntityManager.persist(mentor1);
         testEntityManager.persist(mentor2);
         testEntityManager.persist(student1);
         testEntityManager.persist(student2);
         testEntityManager.flush();
 
-        Optional<User> found = userRepository.findByIdAndAuthority(5, "TEACHER");
+        Optional<User> found = userRepository.findByIdAndAuthority(5489, "ROLE_TEACHER");
 
         assertThat(found).isEmpty();
     }
@@ -183,36 +171,36 @@ public class UserRepositoryIntegrationTest {
     @Test
     void givenMultipleUsers_whenFindByCorrectMailAndCorrectAuthority_thenReturnUser() {
 
-        User mentor1 = new User(1, "johnsmith@email.com", "pass123", "ROLE_MENTOR", 1, "John", "Smith" );
-        User mentor2 = new User(2, "georgeadams@email.com", "pass123", "ROLE_MENTOR", 1, "George", "Adams" );
-        User student1 = new User(3, "karenjohns@email.com", "pass123", "ROLE_STUDENT", 1, "Karen", "Johns" );
-        User student2 = new User(4, "monicadaniels@email.com", "pass123", "ROLE_STUDENT", 1, "Monica", "Daniels" );
+        User mentor1 = new User("johnsmith@email.com", "pass123", "ROLE_MENTOR", 1, "John", "Smith" );
+        User mentor2 = new User("georgeadams@email.com", "pass123", "ROLE_MENTOR", 1, "George", "Adams" );
+        User student1 = new User("karenjohns@email.com", "pass123", "ROLE_STUDENT", 1, "Karen", "Johns" );
+        User student2 = new User("monicadaniels@email.com", "pass123", "ROLE_STUDENT", 1, "Monica", "Daniels" );
         testEntityManager.persist(mentor1);
         testEntityManager.persist(mentor2);
         testEntityManager.persist(student1);
         testEntityManager.persist(student2);
         testEntityManager.flush();
 
-        Optional<User> found = userRepository.findByMailAndAuthority("karenjohns@email.com", "STUDENT");
+        Optional<User> found = userRepository.findByMailAndAuthority(student1.getMail(), student1.getAuthority());
 
         assertThat(found).isNotEmpty();
         assertThat(found.get()).isEqualTo(student1);
     }
 
     @Test
-    void givenMultipleUsers_whenFindByCorrectMailAndIncorrectAuthority_thenReturnUser() {
+    void givenMultipleUsers_whenFindByCorrectMailAndNonexistentAuthority_thenReturnUser() {
 
-        User mentor1 = new User(1, "johnsmith@email.com", "pass123", "ROLE_MENTOR", 1, "John", "Smith" );
-        User mentor2 = new User(2, "georgeadams@email.com", "pass123", "ROLE_MENTOR", 1, "George", "Adams" );
-        User student1 = new User(3, "karenjohns@email.com", "pass123", "ROLE_STUDENT", 1, "Karen", "Johns" );
-        User student2 = new User(4, "monicadaniels@email.com", "pass123", "ROLE_STUDENT", 1, "Monica", "Daniels" );
+        User mentor1 = new User("johnsmith@email.com", "pass123", "ROLE_MENTOR", 1, "John", "Smith" );
+        User mentor2 = new User("georgeadams@email.com", "pass123", "ROLE_MENTOR", 1, "George", "Adams" );
+        User student1 = new User("karenjohns@email.com", "pass123", "ROLE_STUDENT", 1, "Karen", "Johns" );
+        User student2 = new User("monicadaniels@email.com", "pass123", "ROLE_STUDENT", 1, "Monica", "Daniels" );
         testEntityManager.persist(mentor1);
         testEntityManager.persist(mentor2);
         testEntityManager.persist(student1);
         testEntityManager.persist(student2);
         testEntityManager.flush();
 
-        Optional<User> found = userRepository.findByMailAndAuthority("karenjohns@email.com", "TEACHER");
+        Optional<User> found = userRepository.findByMailAndAuthority(student1.getMail(), "ROLE_TEACHER");
 
         assertThat(found).isEmpty();
     }
@@ -220,54 +208,35 @@ public class UserRepositoryIntegrationTest {
     @Test
     void givenMultipleUsers_whenFindByNonexistentMailAndCorrectAuthority_thenReturnUser() {
 
-        User mentor1 = new User(1, "johnsmith@email.com", "pass123", "ROLE_MENTOR", 1, "John", "Smith" );
-        User mentor2 = new User(2, "georgeadams@email.com", "pass123", "ROLE_MENTOR", 1, "George", "Adams" );
-        User student1 = new User(3, "karenjohns@email.com", "pass123", "ROLE_STUDENT", 1, "Karen", "Johns" );
-        User student2 = new User(4, "monicadaniels@email.com", "pass123", "ROLE_STUDENT", 1, "Monica", "Daniels" );
+        User mentor1 = new User("johnsmith@email.com", "pass123", "ROLE_MENTOR", 1, "John", "Smith" );
+        User mentor2 = new User("georgeadams@email.com", "pass123", "ROLE_MENTOR", 1, "George", "Adams" );
+        User student1 = new User("karenjohns@email.com", "pass123", "ROLE_STUDENT", 1, "Karen", "Johns" );
+        User student2 = new User("monicadaniels@email.com", "pass123", "ROLE_STUDENT", 1, "Monica", "Daniels" );
         testEntityManager.persist(mentor1);
         testEntityManager.persist(mentor2);
         testEntityManager.persist(student1);
         testEntityManager.persist(student2);
         testEntityManager.flush();
 
-        Optional<User> found = userRepository.findByMailAndAuthority("laurenwick@email.com", "STUDENT");
+        Optional<User> found = userRepository.findByMailAndAuthority("laurenwick@email.com", student1.getAuthority());
 
         assertThat(found).isEmpty();
     }
-
-    @Test
-    void givenMultipleUsers_whenFindByNonexistentMailAndIncorrectAuthority_thenReturnUser() {
-
-        User mentor1 = new User(1, "johnsmith@email.com", "pass123", "ROLE_MENTOR", 1, "John", "Smith" );
-        User mentor2 = new User(2, "georgeadams@email.com", "pass123", "ROLE_MENTOR", 1, "George", "Adams" );
-        User student1 = new User(3, "karenjohns@email.com", "pass123", "ROLE_STUDENT", 1, "Karen", "Johns" );
-        User student2 = new User(4, "monicadaniels@email.com", "pass123", "ROLE_STUDENT", 1, "Monica", "Daniels" );
-        testEntityManager.persist(mentor1);
-        testEntityManager.persist(mentor2);
-        testEntityManager.persist(student1);
-        testEntityManager.persist(student2);
-        testEntityManager.flush();
-
-        Optional<User> found = userRepository.findByMailAndAuthority("laurenwick@email.com", "TEACHER");
-
-        assertThat(found).isEmpty();
-    }
-
 
     @Test
     void givenMultipleUsers_whenFindByNonexistentMailAndNonexistentAuthority_thenReturnUser() {
 
-        User mentor1 = new User(1, "johnsmith@email.com", "pass123", "ROLE_MENTOR", 1, "John", "Smith" );
-        User mentor2 = new User(2, "georgeadams@email.com", "pass123", "ROLE_MENTOR", 1, "George", "Adams" );
-        User student1 = new User(3, "karenjohns@email.com", "pass123", "ROLE_STUDENT", 1, "Karen", "Johns" );
-        User student2 = new User(4, "monicadaniels@email.com", "pass123", "ROLE_STUDENT", 1, "Monica", "Daniels" );
+        User mentor1 = new User("johnsmith@email.com", "pass123", "ROLE_MENTOR", 1, "John", "Smith" );
+        User mentor2 = new User("georgeadams@email.com", "pass123", "ROLE_MENTOR", 1, "George", "Adams" );
+        User student1 = new User("karenjohns@email.com", "pass123", "ROLE_STUDENT", 1, "Karen", "Johns" );
+        User student2 = new User("monicadaniels@email.com", "pass123", "ROLE_STUDENT", 1, "Monica", "Daniels" );
         testEntityManager.persist(mentor1);
         testEntityManager.persist(mentor2);
         testEntityManager.persist(student1);
         testEntityManager.persist(student2);
         testEntityManager.flush();
 
-        Optional<User> found = userRepository.findByMailAndAuthority("laurenwick@email.com", "TEACHER");
+        Optional<User> found = userRepository.findByMailAndAuthority("laurenwick@email.com", "ROLE_TEACHER");
 
         assertThat(found).isEmpty();
     }
@@ -275,19 +244,18 @@ public class UserRepositoryIntegrationTest {
     @Test
     void givenMultipleUsers_whenFindAllByAuthorityMentor_thenReturnUserMentorList() {
 
-        User mentor1 = new User(1, "johnsmith@email.com", "pass123", "ROLE_MENTOR", 1, "John", "Smith" );
-        User mentor2 = new User(2, "georgeadams@email.com", "pass123", "ROLE_MENTOR", 1, "George", "Adams" );
-        User student1 = new User(3, "karenjohns@email.com", "pass123", "ROLE_STUDENT", 1, "Karen", "Johns" );
-        User student2 = new User(4, "monicadaniels@email.com", "pass123", "ROLE_STUDENT", 1, "Monica", "Daniels" );
+        User mentor1 = new User("johnsmith@email.com", "pass123", "ROLE_MENTOR", 1, "John", "Smith" );
+        User mentor2 = new User("georgeadams@email.com", "pass123", "ROLE_MENTOR", 1, "George", "Adams" );
+        User student1 = new User("karenjohns@email.com", "pass123", "ROLE_STUDENT", 1, "Karen", "Johns" );
+        User student2 = new User("monicadaniels@email.com", "pass123", "ROLE_STUDENT", 1, "Monica", "Daniels" );
         List<User> mentors = List.of(mentor1, mentor2);
-
         testEntityManager.persist(mentor1);
         testEntityManager.persist(mentor2);
         testEntityManager.persist(student1);
         testEntityManager.persist(student2);
         testEntityManager.flush();
 
-        List<User> found = userRepository.findAllByAuthority("MENTOR");
+        List<User> found = userRepository.findAllByAuthority("ROLE_MENTOR");
 
         assertThat(found).isEqualTo(mentors);
     }
@@ -295,19 +263,18 @@ public class UserRepositoryIntegrationTest {
     @Test
     void givenMultipleUsers_whenFindAllByAuthorityStudent_thenReturnUserStudentList() {
 
-        User mentor1 = new User(1, "johnsmith@email.com", "pass123", "ROLE_MENTOR", 1, "John", "Smith" );
-        User mentor2 = new User(2, "georgeadams@email.com", "pass123", "ROLE_MENTOR", 1, "George", "Adams" );
-        User student1 = new User(3, "karenjohns@email.com", "pass123", "ROLE_STUDENT", 1, "Karen", "Johns" );
-        User student2 = new User(4, "monicadaniels@email.com", "pass123", "ROLE_STUDENT", 1, "Monica", "Daniels" );
+        User mentor1 = new User("johnsmith@email.com", "pass123", "ROLE_MENTOR", 1, "John", "Smith" );
+        User mentor2 = new User("georgeadams@email.com", "pass123", "ROLE_MENTOR", 1, "George", "Adams" );
+        User student1 = new User("karenjohns@email.com", "pass123", "ROLE_STUDENT", 1, "Karen", "Johns" );
+        User student2 = new User("monicadaniels@email.com", "pass123", "ROLE_STUDENT", 1, "Monica", "Daniels" );
         List<User> students = List.of(student1, student2);
-
         testEntityManager.persist(mentor1);
         testEntityManager.persist(mentor2);
         testEntityManager.persist(student1);
         testEntityManager.persist(student2);
         testEntityManager.flush();
 
-        List<User> found = userRepository.findAllByAuthority("STUDENTS");
+        List<User> found = userRepository.findAllByAuthority("ROLE_STUDENT");
 
         assertThat(found).isEqualTo(students);
     }
@@ -315,12 +282,12 @@ public class UserRepositoryIntegrationTest {
     @Test
     void givenStudent_whenFindAllByAuthorityMentor_thenReturnEmptyList() {
 
-        User student1 = new User(3, "karenjohns@email.com", "pass123", "ROLE_STUDENT", 1, "Karen", "Johns" );
+        User student = new User("karenjohns@email.com", "pass123", "ROLE_STUDENT", 1, "Karen", "Johns" );
 
-        testEntityManager.persist(student1);
+        testEntityManager.persist(student);
         testEntityManager.flush();
 
-        List<User> found = userRepository.findAllByAuthority("MENTOR");
+        List<User> found = userRepository.findAllByAuthority("ROLE_MENTOR");
 
         assertThat(found.isEmpty()).isEqualTo(true);
     }
@@ -328,14 +295,13 @@ public class UserRepositoryIntegrationTest {
     @Test
     void givenMentor_whenFindAllByAuthorityStudent_thenReturnEmptyList() {
 
-        User mentor1 = new User(1, "johnsmith@email.com", "pass123", "ROLE_MENTOR", 1, "John", "Smith" );
+        User mentor = new User("johnsmith@email.com", "pass123", "ROLE_MENTOR", 1, "John", "Smith" );
 
-        testEntityManager.persist(mentor1);
+        testEntityManager.persist(mentor);
         testEntityManager.flush();
 
-        List<User> found = userRepository.findAllByAuthority("STUDENTS");
+        List<User> found = userRepository.findAllByAuthority("ROLE_STUDENT");
 
         assertThat(found.isEmpty()).isEqualTo(true);
     }
-
 }

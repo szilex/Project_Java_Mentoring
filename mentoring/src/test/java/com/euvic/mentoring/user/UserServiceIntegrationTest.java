@@ -27,6 +27,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 
 @RunWith(SpringRunner.class)
 @ExtendWith(MockitoExtension.class)
@@ -41,10 +42,8 @@ public class UserServiceIntegrationTest {
     @Test()
     public void givenNoMentor_whenGetMentor_thenThrowUserNotFoundException() {
 
-        User mentorToReturn = new User(1, "johnsmith@email.com", "pass123", "ROLE_MENTOR", 1, "John", "Smith" );
-
-        Mockito.when(userRepository.findFirstByAuthorityOrderByIdAsc(mentorToReturn.getAuthority()))
-                .thenThrow(new UserNotFoundException());
+        Mockito.when(userRepository.findFirstByAuthorityOrderByIdAsc(any(String.class)))
+                .thenReturn(Optional.empty());
 
         assertThrows(UserNotFoundException.class, userService::getMentor);
     }
@@ -88,9 +87,7 @@ public class UserServiceIntegrationTest {
     @Test
     public void givenNoStudents_whenGetStudents_thenReturnEmptyList() {
 
-        String authority = "ROLE_STUDENT";
-
-        Mockito.when(userRepository.findAllByAuthority(authority)).thenReturn(Collections.emptyList());
+        Mockito.when(userRepository.findAllByAuthority(any(String.class))).thenReturn(Collections.emptyList());
         List<User> students = userService.getStudents();
 
         assertThat(students.isEmpty()).isTrue();
@@ -377,5 +374,4 @@ public class UserServiceIntegrationTest {
 
         Assertions.assertDoesNotThrow(() -> userService.deleteStudent(studentToDelete.getId()));
     }
-
 }

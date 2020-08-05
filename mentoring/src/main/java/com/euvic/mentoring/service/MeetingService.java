@@ -35,11 +35,6 @@ public class MeetingService implements IMeetingService {
         this.userService = userService;
         this.mailService = mailService;
         this.modelMapper = modelMapper;
-
-        this.modelMapper.typeMap(Meeting.class, MeetingDTO.class).addMappings(mapper -> {
-            mapper.map(src -> src.getMentor().getId(), MeetingDTO::setMentorId);
-            mapper.map(src -> src.getStudent().getId(), MeetingDTO::setStudentId);
-        });
     }
 
     @Override
@@ -60,7 +55,6 @@ public class MeetingService implements IMeetingService {
         return meetings.stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
-
     }
 
     @Override
@@ -182,4 +176,6 @@ public class MeetingService implements IMeetingService {
     private Meeting convertToEntity(MeetingDTO meetingDTO) {
         return modelMapper.map(meetingDTO, Meeting.class);
     }
+
+
 }
