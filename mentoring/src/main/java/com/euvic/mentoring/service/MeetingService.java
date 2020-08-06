@@ -70,29 +70,36 @@ public class MeetingService implements IMeetingService {
     @Transactional
     public MeetingDTO saveMeeting(MeetingDTO meetingDTO) throws UserNotFoundException {
 
-        if (meetingDTO.getId() != 0 || meetingDTO.getMentorId() != 0 || meetingDTO.getStudentId() != 0) {
+        if (meetingDTO.getId() != null || meetingDTO.getMentorId() != null || meetingDTO.getStudentId() != null) {
             throw new IllegalArgumentException("Illegal argument specified");
+        }
+
+        if (meetingDTO.getDate() == null || meetingDTO.getStartTime() == null || meetingDTO.getEndTime() == null) {
+            throw new IllegalArgumentException("Insufficient argument list");
         }
 
         if (!Duration.between(meetingDTO.getStartTime(), meetingDTO.getEndTime()).equals(Duration.of(15, MINUTES))) {
             throw new IllegalArgumentException("Time interval must be equal to 15 minutes");
         }
 
-        //Meeting meeting = new Meeting(meetingDTO.getDate(), meetingDTO.getStartTime(), meetingDTO.getEndTime(), userService.getMentor(), null);
         Meeting meeting = convertToEntity(meetingDTO);
         meeting.setMentor(userService.getMentor());
         meeting.setStudent(null);
 
         Meeting savedMeeting = meetingRepository.save(meeting);
 
-        return new MeetingDTO(savedMeeting);
+        return convertToDTO(savedMeeting);
     }
 
     @Override
     @Transactional
-    public MeetingDTO updateMeeting(MeetingDTO meetingDetails) throws UserNotFoundException, MeetingNotFoundException {
+    public MeetingDTO updateMeeting(MeetingDTO meetingDTO) throws UserNotFoundException, MeetingNotFoundException {
 
-        if (meetingDetails.getId() == 0 || meetingDetails.getStudentId() == 0) {
+        if (meetingDTO.getDate() != null || meetingDTO.getStartTime() != null || meetingDTO.getEndTime() != null || meetingDTO.getMentorId() != null) {
+            throw new IllegalArgumentException("Illegal argument specified");
+        }
+
+        if (meetingDTO.getId() == null || meetingDTO.getStudentId() == null) {
             throw new IllegalArgumentException("Insufficient argument list");
         }
 
@@ -103,18 +110,18 @@ public class MeetingService implements IMeetingService {
                 .filter(x->x.getMail().equals(username))
                 .findFirst()
                 .get();
-        if (loggedStudent.getId() != meetingDetails.getStudentId()) {
+        if (loggedStudent.getId() != meetingDTO.getStudentId()) {
             throw new IllegalArgumentException("Student cannot book a meeting for another student");
         }
 
-        Optional<Meeting> dbMeeting = meetingRepository.findById(meetingDetails.getId());
+        Optional<Meeting> dbMeeting = meetingRepository.findById(meetingDTO.getId());
         if (dbMeeting.isEmpty()) {
-            throw new MeetingNotFoundException(meetingDetails.getId());
+            throw new MeetingNotFoundException(meetingDTO.getId());
         }
 
         Meeting temporaryMeeting = dbMeeting.get();
         if(temporaryMeeting.getStudent() != null) {
-            throw new IllegalArgumentException("Meeting with specified id is already booked: " + meetingDetails.getId());
+            throw new IllegalArgumentException("Meeting with specified id is already booked: " + meetingDTO.getId());
         }
 
         temporaryMeeting.setStudent(loggedStudent);
@@ -176,6 +183,4 @@ public class MeetingService implements IMeetingService {
     private Meeting convertToEntity(MeetingDTO meetingDTO) {
         return modelMapper.map(meetingDTO, Meeting.class);
     }
-
-
 }

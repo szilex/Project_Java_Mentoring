@@ -20,15 +20,15 @@ public class MeetingDTO {
         this.date = date;
         this.startTime = startTime;
         this.endTime = endTime;
-        this.mentorId = mentorId;
+        this.mentorId = (mentorId == null) ? 0 : mentorId;
     }
 
     public MeetingDTO(LocalDate date, LocalTime startTime, LocalTime endTime, Integer mentorId, Integer studentId) {
         this.date = date;
         this.startTime = startTime;
         this.endTime = endTime;
-        this.mentorId = mentorId;
-        this.studentId = studentId;
+        this.mentorId = (mentorId == null) ? 0 : mentorId;
+        this.studentId = (studentId == null) ? 0 : studentId;
     }
     
     public MeetingDTO(Meeting meeting) {
@@ -40,11 +40,11 @@ public class MeetingDTO {
     }
 
     public Integer getId() {
-        return id;
+        return (id == 0) ? null : id;
     }
 
     public void setId(Integer id) {
-        this.id = id;
+            this.id = (id == null) ? 0 : id;
     }
 
     public LocalDate getDate() {
@@ -71,20 +71,20 @@ public class MeetingDTO {
         this.endTime = endTime;
     }
 
-    public int getMentorId() {
-        return mentorId;
+    public Integer getMentorId() {
+        return (mentorId == 0) ? null : mentorId;
     }
 
-    public void setMentorId(int mentorId) {
-        this.mentorId = mentorId;
+    public void setMentorId(Integer mentorId) {
+        this.mentorId = (mentorId == null) ? 0 : mentorId;
     }
 
-    public int getStudentId() {
-        return studentId;
+    public Integer getStudentId() {
+        return (studentId == 0) ? null : studentId;
     }
 
-    public void setStudentId(int studentId) {
-        this.studentId = studentId;
+    public void setStudentId(Integer studentId) {
+        this.studentId = (studentId == null) ? 0 : studentId;
     }
 
     @Override
