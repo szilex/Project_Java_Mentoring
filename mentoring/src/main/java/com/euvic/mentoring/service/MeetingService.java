@@ -70,13 +70,14 @@ public class MeetingService implements IMeetingService {
     @Transactional
     public MeetingDTO saveMeeting(MeetingDTO meetingDTO) throws UserNotFoundException {
 
+        if (meetingDTO == null || meetingDTO.getDate() == null || meetingDTO.getStartTime() == null || meetingDTO.getEndTime() == null) {
+            throw new IllegalArgumentException("Insufficient argument list");
+        }
+
         if (meetingDTO.getId() != null || meetingDTO.getMentorId() != null || meetingDTO.getStudentId() != null) {
             throw new IllegalArgumentException("Illegal argument specified");
         }
 
-        if (meetingDTO.getDate() == null || meetingDTO.getStartTime() == null || meetingDTO.getEndTime() == null) {
-            throw new IllegalArgumentException("Insufficient argument list");
-        }
 
         if (!Duration.between(meetingDTO.getStartTime(), meetingDTO.getEndTime()).equals(Duration.of(15, MINUTES))) {
             throw new IllegalArgumentException("Time interval must be equal to 15 minutes");
@@ -95,13 +96,15 @@ public class MeetingService implements IMeetingService {
     @Transactional
     public MeetingDTO updateMeeting(MeetingDTO meetingDTO) throws UserNotFoundException, MeetingNotFoundException {
 
+        if (meetingDTO == null || meetingDTO.getId() == null || meetingDTO.getStudentId() == null) {
+            throw new IllegalArgumentException("Insufficient argument list");
+        }
+
         if (meetingDTO.getDate() != null || meetingDTO.getStartTime() != null || meetingDTO.getEndTime() != null || meetingDTO.getMentorId() != null) {
             throw new IllegalArgumentException("Illegal argument specified");
         }
 
-        if (meetingDTO.getId() == null || meetingDTO.getStudentId() == null) {
-            throw new IllegalArgumentException("Insufficient argument list");
-        }
+
 
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         String username = (principal instanceof UserDetails) ? ((UserDetails)principal).getUsername() : principal.toString();

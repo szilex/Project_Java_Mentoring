@@ -108,7 +108,7 @@ public class UserServiceIntegrationTest {
     @Test
     public void givenNull_whenSaveStudent_thenReturnNull() {
 
-        assertThat(userService.saveStudent(null)).isNull();
+        assertThrows(IllegalArgumentException.class, () -> userService.saveStudent(null));
     }
 
     @Test
@@ -136,15 +136,16 @@ public class UserServiceIntegrationTest {
 
     @Test
     public void givenNull_whenUpdateStudent_thenReturnNull() {
-        assertThat(userService.updateStudent(null)).isNull();
+
+        assertThrows(IllegalArgumentException.class, () -> userService.updateStudent(null));
     }
 
     @Test
     public void givenNonExistingStudent_whenUpdateStudent_thenThrowUserNotFoundException() {
 
-        User studentToUpdate = new User(3, "karenjohns@email.com", "pass123", "ROLE_STUDENT", 1, "Karen", "Johns");
+        User studentToUpdate = new User(3, "karenjohns@email.com", "pass123", null, 0, "Karen", "Johns");
 
-        Mockito.when(userRepository.findByIdAndAuthority(studentToUpdate.getId(), studentToUpdate.getAuthority())).thenReturn(Optional.empty());
+        Mockito.when(userRepository.findByIdAndAuthority(studentToUpdate.getId(), "ROLE_STUDENT")).thenReturn(Optional.empty());
 
         assertThrows(UserNotFoundException.class, () -> userService.updateStudent(studentToUpdate));
     }
@@ -155,7 +156,7 @@ public class UserServiceIntegrationTest {
         User studentToUpdate = new User(3, "karenjohns@email.com", "pass123", "ROLE_STUDENT", 1, "Karen", "Johns");
         User loggedStudent = new User(4, "monicadaniels@email.com", "pass123", "ROLE_STUDENT", 1, "Monica", "Daniels");
 
-        Mockito.when(userRepository.findByIdAndAuthority(studentToUpdate.getId(), studentToUpdate.getAuthority())).thenReturn(Optional.of(studentToUpdate));
+        Mockito.lenient().when(userRepository.findByIdAndAuthority(studentToUpdate.getId(), studentToUpdate.getAuthority())).thenReturn(Optional.of(studentToUpdate));
         Mockito.lenient().when(userRepository.findByMailAndAuthority(loggedStudent.getMail(), loggedStudent.getAuthority())).thenReturn(Optional.of(loggedStudent));
         Mockito.lenient().when(userRepository.save(studentToUpdate)).thenReturn(studentToUpdate);
 
@@ -163,7 +164,7 @@ public class UserServiceIntegrationTest {
         SecurityContext securityContext = Mockito.mock(SecurityContext.class);
         Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
         SecurityContextHolder.setContext(securityContext);
-        Mockito.when(SecurityContextHolder.getContext().getAuthentication().getPrincipal()).thenReturn(new UserDetails() {
+        Mockito.lenient().when(SecurityContextHolder.getContext().getAuthentication().getPrincipal()).thenReturn(new UserDetails() {
             @Override
             public Collection<? extends GrantedAuthority> getAuthorities() {
                 return List.of((GrantedAuthority) () -> "ROLE_STUDENT");
@@ -206,10 +207,10 @@ public class UserServiceIntegrationTest {
     @Test
     public void givenExistingStudent_whenUpdateStudentBySameStudent_thenUpdateStudent() {
 
-        User studentToUpdate = new User(3, "karenjohns@email.com", "pass123", "ROLE_STUDENT", 1, "Karen", "Johns");
+        User studentToUpdate = new User(3, "karenjohns@email.com", "pass123", null, 0, "Karen", "Johns");
 
-        Mockito.when(userRepository.findByIdAndAuthority(studentToUpdate.getId(), studentToUpdate.getAuthority())).thenReturn(Optional.of(studentToUpdate));
-        Mockito.lenient().when(userRepository.findByMailAndAuthority(studentToUpdate.getMail(), studentToUpdate.getAuthority())).thenReturn(Optional.of(studentToUpdate));
+        Mockito.when(userRepository.findByIdAndAuthority(studentToUpdate.getId(), "ROLE_STUDENT")).thenReturn(Optional.of(studentToUpdate));
+        Mockito.lenient().when(userRepository.findByMailAndAuthority(studentToUpdate.getMail(), "ROLE_STUDENT")).thenReturn(Optional.of(studentToUpdate));
         Mockito.lenient().when(userRepository.save(studentToUpdate)).thenReturn(studentToUpdate);
 
         Authentication authentication = Mockito.mock(Authentication.class);

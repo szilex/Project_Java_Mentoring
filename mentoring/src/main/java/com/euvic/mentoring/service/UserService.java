@@ -9,6 +9,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -53,8 +54,17 @@ public class UserService implements IUserService {
     @Override
     public User saveStudent(User student) {
 
-        if (student == null) {
-            return null;
+        if (student == null || student.getMail() == null || student.getPassword() == null || student.getFirstName() == null || student.getLastName() == null) {
+            throw new IllegalArgumentException("Insufficient argument list");
+        }
+
+        if (student.getId() != 0 || student.getAuthority() != null || student.getEnabled() != 0) {
+            throw new IllegalArgumentException("Illegal argument specified");
+        }
+
+        Optional<User> dbStudent = userRepository.findByMailAndAuthority(student.getMail(), "ROLE_STUDENT");
+        if (dbStudent.isPresent()) {
+            throw new IllegalArgumentException("User with specified mail already exists");
         }
 
         student.setAuthority("ROLE_STUDENT");
@@ -66,10 +76,15 @@ public class UserService implements IUserService {
     }
 
     @Override
+    @Transactional
     public User updateStudent(User student) throws UserNotFoundException {
 
         if (student == null) {
-            return null;
+            throw new IllegalArgumentException("Insufficient argument list");
+        }
+
+        if (student.getEnabled() != 0 || student.getAuthority() != null) {
+            throw new IllegalArgumentException("Illegal argument specified");
         }
 
         Optional<User> dbStudent = userRepository.findByIdAndAuthority(student.getId(), "ROLE_STUDENT");
@@ -83,7 +98,8 @@ public class UserService implements IUserService {
             if (student.getFirstName() != null) temporaryStudent.setFirstName(student.getFirstName());
             if (student.getLastName() != null) temporaryStudent.setLastName(student.getLastName());
             if (student.getMail() != null) temporaryStudent.setMail(student.getMail());
-            if (student.getPassword() != null) temporaryStudent.setPassword(student.getPassword());
+            if (student.getPassword() != null) temporaryStudent.setPassword(new BCryptPasswordEncoder().encode(student.getPassword()));
+            temporaryStudent.setEnabled(1);
 
             return userRepository.save(temporaryStudent);
         }
@@ -92,6 +108,7 @@ public class UserService implements IUserService {
     }
 
     @Override
+    @Transactional
     public void deleteStudent(int id) throws NoSuchElementException, UserNotFoundException {
         Optional<User> student = userRepository.findByIdAndAuthority(id, "ROLE_STUDENT");
         if (student.isPresent()) {
