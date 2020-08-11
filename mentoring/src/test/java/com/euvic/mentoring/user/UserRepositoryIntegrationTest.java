@@ -188,7 +188,7 @@ public class UserRepositoryIntegrationTest {
     }
 
     @Test
-    void givenMultipleUsers_whenFindByCorrectMailAndNonexistentAuthority_thenReturnUser() {
+    void givenMultipleUsers_whenFindByCorrectMailAndNonexistentAuthority_thenReturnEmpty() {
 
         User mentor1 = new User("johnsmith@email.com", "pass123", "ROLE_MENTOR", 1, "John", "Smith" );
         User mentor2 = new User("georgeadams@email.com", "pass123", "ROLE_MENTOR", 1, "George", "Adams" );
@@ -206,7 +206,7 @@ public class UserRepositoryIntegrationTest {
     }
 
     @Test
-    void givenMultipleUsers_whenFindByNonexistentMailAndCorrectAuthority_thenReturnUser() {
+    void givenMultipleUsers_whenFindByNonexistentMailAndCorrectAuthority_thenReturnEmpty() {
 
         User mentor1 = new User("johnsmith@email.com", "pass123", "ROLE_MENTOR", 1, "John", "Smith" );
         User mentor2 = new User("georgeadams@email.com", "pass123", "ROLE_MENTOR", 1, "George", "Adams" );
@@ -224,7 +224,7 @@ public class UserRepositoryIntegrationTest {
     }
 
     @Test
-    void givenMultipleUsers_whenFindByNonexistentMailAndNonexistentAuthority_thenReturnUser() {
+    void givenMultipleUsers_whenFindByNonexistentMailAndNonexistentAuthority_thenReturnEmpty() {
 
         User mentor1 = new User("johnsmith@email.com", "pass123", "ROLE_MENTOR", 1, "John", "Smith" );
         User mentor2 = new User("georgeadams@email.com", "pass123", "ROLE_MENTOR", 1, "George", "Adams" );
@@ -237,6 +237,43 @@ public class UserRepositoryIntegrationTest {
         testEntityManager.flush();
 
         Optional<User> found = userRepository.findByMailAndAuthority("laurenwick@email.com", "ROLE_TEACHER");
+
+        assertThat(found).isEmpty();
+    }
+
+    @Test
+    void givenMultipleUsers_whenFindByCorrectMail_thenReturnUser() {
+
+        User mentor1 = new User("johnsmith@email.com", "pass123", "ROLE_MENTOR", 1, "John", "Smith" );
+        User mentor2 = new User("georgeadams@email.com", "pass123", "ROLE_MENTOR", 1, "George", "Adams" );
+        User student1 = new User("karenjohns@email.com", "pass123", "ROLE_STUDENT", 1, "Karen", "Johns" );
+        User student2 = new User("monicadaniels@email.com", "pass123", "ROLE_STUDENT", 1, "Monica", "Daniels" );
+        testEntityManager.persist(mentor1);
+        testEntityManager.persist(mentor2);
+        testEntityManager.persist(student1);
+        testEntityManager.persist(student2);
+        testEntityManager.flush();
+
+        Optional<User> found = userRepository.findByMail(student1.getMail());
+
+        assertThat(found).isNotEmpty();
+        assertThat(found.get()).isEqualTo(student1);
+    }
+
+    @Test
+    void givenMultipleUsers_whenFindByNonexistentMail_thenReturnEmpty() {
+
+        User mentor1 = new User("johnsmith@email.com", "pass123", "ROLE_MENTOR", 1, "John", "Smith" );
+        User mentor2 = new User("georgeadams@email.com", "pass123", "ROLE_MENTOR", 1, "George", "Adams" );
+        User student1 = new User("karenjohns@email.com", "pass123", "ROLE_STUDENT", 1, "Karen", "Johns" );
+        User student2 = new User("monicadaniels@email.com", "pass123", "ROLE_STUDENT", 1, "Monica", "Daniels" );
+        testEntityManager.persist(mentor1);
+        testEntityManager.persist(mentor2);
+        testEntityManager.persist(student1);
+        testEntityManager.persist(student2);
+        testEntityManager.flush();
+
+        Optional<User> found = userRepository.findByMail("laurenwick@email.com");
 
         assertThat(found).isEmpty();
     }

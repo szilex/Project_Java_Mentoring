@@ -85,24 +85,281 @@ public class UserServiceIntegrationTest {
     }
 
     @Test
-    public void givenNoStudents_whenGetStudents_thenReturnEmptyList() {
+    public void givenNoStudentsAndUserLoggedAsMentor_whenGetStudents_thenReturnEmptyList() {
+
+        Authentication authentication = Mockito.mock(Authentication.class);
+        SecurityContext securityContext = Mockito.mock(SecurityContext.class);
+        Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+        Mockito.lenient().when(SecurityContextHolder.getContext().getAuthentication().getPrincipal()).thenReturn(new UserDetails() {
+            @Override
+            public Collection<? extends GrantedAuthority> getAuthorities() {
+                return List.of((GrantedAuthority) () -> "ROLE_MENTOR");
+            }
+
+            @Override
+            public String getPassword() {
+                return null;
+            }
+
+            @Override
+            public String getUsername() {
+                return "johnsmith@email.com";
+            }
+
+            @Override
+            public boolean isAccountNonExpired() {
+                return false;
+            }
+
+            @Override
+            public boolean isAccountNonLocked() {
+                return false;
+            }
+
+            @Override
+            public boolean isCredentialsNonExpired() {
+                return false;
+            }
+
+            @Override
+            public boolean isEnabled() {
+                return false;
+            }
+        });
 
         Mockito.when(userRepository.findAllByAuthority(any(String.class))).thenReturn(Collections.emptyList());
+        Mockito.when(userRepository.findByMail(any(String.class))).thenReturn(Optional.of(new User(1, "johnsmith@email.com", "pass123", "ROLE_MENTOR", 1, "John", "Smith")));
         List<User> students = userService.getStudents();
 
         assertThat(students.isEmpty()).isTrue();
     }
 
     @Test
-    public void givenOneStudent_whenGetStudents_thenReturnStudentList() {
+    public void givenOneStudentAndUserLoggedAsMentor_whenGetStudents_thenReturnStudentListWithOneEntry() {
 
         List<User> studentToReturn = List.of(new User(3, "karenjohns@email.com", "pass123", "ROLE_STUDENT", 1, "Karen", "Johns" ));
         String authority = "ROLE_STUDENT";
 
-        Mockito.when(userRepository.findAllByAuthority(authority)).thenReturn(studentToReturn);
+        Authentication authentication = Mockito.mock(Authentication.class);
+        SecurityContext securityContext = Mockito.mock(SecurityContext.class);
+        Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+        Mockito.lenient().when(SecurityContextHolder.getContext().getAuthentication().getPrincipal()).thenReturn(new UserDetails() {
+            @Override
+            public Collection<? extends GrantedAuthority> getAuthorities() {
+                return List.of((GrantedAuthority) () -> "ROLE_MENTOR");
+            }
+
+            @Override
+            public String getPassword() {
+                return null;
+            }
+
+            @Override
+            public String getUsername() {
+                return "johnsmith@email.com";
+            }
+
+            @Override
+            public boolean isAccountNonExpired() {
+                return false;
+            }
+
+            @Override
+            public boolean isAccountNonLocked() {
+                return false;
+            }
+
+            @Override
+            public boolean isCredentialsNonExpired() {
+                return false;
+            }
+
+            @Override
+            public boolean isEnabled() {
+                return false;
+            }
+        });
+
+        Mockito.lenient().when(userRepository.findAllByAuthority(authority)).thenReturn(studentToReturn);
+        Mockito.lenient().when(userRepository.findByMail(any(String.class))).thenReturn(Optional.of(new User(1, "johnsmith@email.com", "pass123", "ROLE_MENTOR", 1, "John", "Smith")));
+
         List<User> students = userService.getStudents();
 
         assertThat(students.size()).isEqualTo(1);
+    }
+
+    @Test
+    public void givenOneStudentAndUserLoggedAsStudent_whenGetStudents_thenReturnStudentListWithOneEntry() {
+
+        List<User> studentToReturn = List.of(new User(3, "karenjohns@email.com", "pass123", "ROLE_STUDENT", 1, "Karen", "Johns" ));
+        String authority = "ROLE_STUDENT";
+
+        Authentication authentication = Mockito.mock(Authentication.class);
+        SecurityContext securityContext = Mockito.mock(SecurityContext.class);
+        Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+        Mockito.lenient().when(SecurityContextHolder.getContext().getAuthentication().getPrincipal()).thenReturn(new UserDetails() {
+            @Override
+            public Collection<? extends GrantedAuthority> getAuthorities() {
+                return List.of((GrantedAuthority) () -> "ROLE_STUDENT");
+            }
+
+            @Override
+            public String getPassword() {
+                return null;
+            }
+
+            @Override
+            public String getUsername() {
+                return "karenjohns@email.com";
+            }
+
+            @Override
+            public boolean isAccountNonExpired() {
+                return false;
+            }
+
+            @Override
+            public boolean isAccountNonLocked() {
+                return false;
+            }
+
+            @Override
+            public boolean isCredentialsNonExpired() {
+                return false;
+            }
+
+            @Override
+            public boolean isEnabled() {
+                return false;
+            }
+        });
+
+        Mockito.lenient().when(userRepository.findAllByAuthority(authority)).thenReturn(studentToReturn);
+        Mockito.lenient().when(userRepository.findByMail(any(String.class))).thenReturn(Optional.of(studentToReturn.get(0)));
+
+        List<User> students = userService.getStudents();
+
+        assertThat(students.size()).isEqualTo(1);
+    }
+
+    @Test
+    public void givenMultipleStudentsAndUserLoggedAsMentor_whenGetStudents_thenReturnStudentListWithMultipleEntries() {
+
+        List<User> studentToReturn = List.of(
+                new User(3, "karenjohns@email.com", "pass123", "ROLE_STUDENT", 1, "Karen", "Johns" ),
+                new User(4, "monicadaniels@email.com", "pass123", "ROLE_STUDENT", 1, "Monica", "Daniels" )
+        );
+        String authority = "ROLE_STUDENT";
+
+        Authentication authentication = Mockito.mock(Authentication.class);
+        SecurityContext securityContext = Mockito.mock(SecurityContext.class);
+        Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+        Mockito.lenient().when(SecurityContextHolder.getContext().getAuthentication().getPrincipal()).thenReturn(new UserDetails() {
+            @Override
+            public Collection<? extends GrantedAuthority> getAuthorities() {
+                return List.of((GrantedAuthority) () -> "ROLE_MENTOR");
+            }
+
+            @Override
+            public String getPassword() {
+                return null;
+            }
+
+            @Override
+            public String getUsername() {
+                return "johnsmith@email.com";
+            }
+
+            @Override
+            public boolean isAccountNonExpired() {
+                return false;
+            }
+
+            @Override
+            public boolean isAccountNonLocked() {
+                return false;
+            }
+
+            @Override
+            public boolean isCredentialsNonExpired() {
+                return false;
+            }
+
+            @Override
+            public boolean isEnabled() {
+                return false;
+            }
+        });
+
+        Mockito.lenient().when(userRepository.findAllByAuthority(authority)).thenReturn(studentToReturn);
+        Mockito.lenient().when(userRepository.findByMail(any(String.class))).thenReturn(Optional.of(new User(1, "johnsmith@email.com", "pass123", "ROLE_MENTOR", 1, "John", "Smith")));
+
+        List<User> students = userService.getStudents();
+
+        assertThat(students.size()).isEqualTo(2);
+    }
+
+    @Test
+    public void givenMultipleStudentsAndUserLoggedAsStudent_whenGetStudents_thenReturnStudentListWithOneEntry() {
+
+        List<User> studentToReturn = List.of(
+                new User(3, "karenjohns@email.com", "pass123", "ROLE_STUDENT", 1, "Karen", "Johns" ),
+                new User(4, "monicadaniels@email.com", "pass123", "ROLE_STUDENT", 1, "Monica", "Daniels" )
+        );
+        String authority = "ROLE_STUDENT";
+
+        Authentication authentication = Mockito.mock(Authentication.class);
+        SecurityContext securityContext = Mockito.mock(SecurityContext.class);
+        Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+        Mockito.lenient().when(SecurityContextHolder.getContext().getAuthentication().getPrincipal()).thenReturn(new UserDetails() {
+            @Override
+            public Collection<? extends GrantedAuthority> getAuthorities() {
+                return List.of((GrantedAuthority) () -> "ROLE_STUDENT");
+            }
+
+            @Override
+            public String getPassword() {
+                return null;
+            }
+
+            @Override
+            public String getUsername() {
+                return "karenjohns@email.com";
+            }
+
+            @Override
+            public boolean isAccountNonExpired() {
+                return false;
+            }
+
+            @Override
+            public boolean isAccountNonLocked() {
+                return false;
+            }
+
+            @Override
+            public boolean isCredentialsNonExpired() {
+                return false;
+            }
+
+            @Override
+            public boolean isEnabled() {
+                return false;
+            }
+        });
+
+        Mockito.lenient().when(userRepository.findAllByAuthority(authority)).thenReturn(studentToReturn);
+        Mockito.lenient().when(userRepository.findByMail(any(String.class))).thenReturn(Optional.of(studentToReturn.get(0)));
+
+        List<User> students = userService.getStudents();
+
+        assertThat(students.size()).isEqualTo(1);
+        assertThat(students.get(0).getMail()).isEqualTo("karenjohns@email.com");
     }
 
     @Test

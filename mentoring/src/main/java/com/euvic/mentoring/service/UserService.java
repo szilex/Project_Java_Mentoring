@@ -48,7 +48,17 @@ public class UserService implements IUserService {
 
     @Override
     public List<User> getStudents() {
-        return userRepository.findAllByAuthority("ROLE_STUDENT");
+
+        User loggedUser = getCurrentUser();
+
+        switch (loggedUser.getAuthority()) {
+            case "ROLE_MENTOR" :
+                return userRepository.findAllByAuthority("ROLE_STUDENT");
+            case "ROLE_STUDENT" :
+                return List.of(loggedUser);
+            default:
+                throw new UserNotFoundException();
+        }
     }
 
     @Override
@@ -125,6 +135,7 @@ public class UserService implements IUserService {
     }
 
     private boolean isInvokedByCorrectUser(int id) {
+
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         String username = (principal instanceof UserDetails) ? ((UserDetails)principal).getUsername() : principal.toString();
 
@@ -134,5 +145,13 @@ public class UserService implements IUserService {
         }
 
         return true;
+    }
+
+    private User getCurrentUser() {
+
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        String username = (principal instanceof UserDetails) ? ((UserDetails)principal).getUsername() : principal.toString();
+
+        return userRepository.findByMail(username).get();
     }
 }
