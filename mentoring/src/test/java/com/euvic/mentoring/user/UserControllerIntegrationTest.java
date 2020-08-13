@@ -131,13 +131,13 @@ public class UserControllerIntegrationTest {
 
     @Test
     @WithMockUser(username = "user@email.com", password = "pass123", authorities = {"ROLE_STUDENT"})
-    void givenUserLoggedAsStudentAndNoStudentWithSpecifiedId_whenGetStudent_thenReturn400BadRequest() throws Exception {
+    void givenUserLoggedAsStudentAndNoStudentWithSpecifiedId_whenGetStudent_thenReturn403Forbidden() throws Exception {
 
         when(userService.getStudent(any(Integer.class))).thenThrow(new UserNotFoundException());
 
         mockMvc.perform(get("/user/student/2"))
                 .andDo(print())
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -148,9 +148,7 @@ public class UserControllerIntegrationTest {
 
         mockMvc.perform(get("/user/student/2"))
                 .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(content().json(
-                        "{\"id\":2,\"mail\":\"georgeadams@email.com\",\"password\":\"pass123\",\"authority\":\"ROLE_STUDENT\",\"enabled\":1,\"firstName\":\"George\",\"lastName\":\"Adams\"}"));
+                .andExpect(status().isForbidden());
     }
 
     @Test

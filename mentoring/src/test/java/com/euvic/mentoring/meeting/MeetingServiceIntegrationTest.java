@@ -152,6 +152,7 @@ public class MeetingServiceIntegrationTest {
         outputMeetingDTO = new MeetingDTO(meeting);
 
         Mockito.lenient().when(userService.getMentor()).thenReturn(mentor);
+        Mockito.lenient().when(meetingRepository.findByDate(inputMeetingDTO.getDate())).thenReturn(Collections.emptyList());
         Mockito.lenient().when(meetingRepository.save(meeting)).thenReturn(meeting);
         Mockito.lenient().when(modelMapper.map(inputMeetingDTO, Meeting.class)).thenReturn(meeting);
         Mockito.lenient().when(modelMapper.map(meeting, MeetingDTO.class)).thenReturn(outputMeetingDTO);
@@ -168,6 +169,7 @@ public class MeetingServiceIntegrationTest {
         outputMeetingDTO = new MeetingDTO(meeting);
 
         Mockito.lenient().when(userService.getMentor()).thenReturn(mentor);
+        Mockito.lenient().when(meetingRepository.findByDate(inputMeetingDTO.getDate())).thenReturn(Collections.emptyList());
         Mockito.lenient().when(meetingRepository.save(meeting)).thenReturn(meeting);
         Mockito.lenient().when(modelMapper.map(inputMeetingDTO, Meeting.class)).thenReturn(meeting);
         Mockito.lenient().when(modelMapper.map(meeting, MeetingDTO.class)).thenReturn(outputMeetingDTO);
@@ -186,6 +188,7 @@ public class MeetingServiceIntegrationTest {
         outputMeetingDTO = new MeetingDTO(meeting);
 
         Mockito.lenient().when(userService.getMentor()).thenReturn(mentor);
+        Mockito.lenient().when(meetingRepository.findByDate(inputMeetingDTO.getDate())).thenReturn(Collections.emptyList());
         Mockito.lenient().when(meetingRepository.save(meeting)).thenReturn(meeting);
         Mockito.lenient().when(modelMapper.map(inputMeetingDTO, Meeting.class)).thenReturn(meeting);
         Mockito.lenient().when(modelMapper.map(meeting, MeetingDTO.class)).thenReturn(outputMeetingDTO);
@@ -204,6 +207,7 @@ public class MeetingServiceIntegrationTest {
         outputMeetingDTO = new MeetingDTO(meeting);
 
         Mockito.lenient().when(userService.getMentor()).thenReturn(mentor);
+        Mockito.lenient().when(meetingRepository.findByDate(inputMeetingDTO.getDate())).thenReturn(Collections.emptyList());
         Mockito.lenient().when(meetingRepository.save(meeting)).thenReturn(meeting);
         Mockito.lenient().when(modelMapper.map(inputMeetingDTO, Meeting.class)).thenReturn(meeting);
         Mockito.lenient().when(modelMapper.map(meeting, MeetingDTO.class)).thenReturn(outputMeetingDTO);
@@ -222,6 +226,7 @@ public class MeetingServiceIntegrationTest {
         outputMeetingDTO = new MeetingDTO(meeting);
 
         Mockito.lenient().when(userService.getMentor()).thenReturn(mentor);
+        Mockito.lenient().when(meetingRepository.findByDate(inputMeetingDTO.getDate())).thenReturn(Collections.emptyList());
         Mockito.lenient().when(meetingRepository.save(meeting)).thenReturn(meeting);
         Mockito.lenient().when(modelMapper.map(inputMeetingDTO, Meeting.class)).thenReturn(meeting);
         Mockito.lenient().when(modelMapper.map(meeting, MeetingDTO.class)).thenReturn(outputMeetingDTO);
@@ -240,6 +245,7 @@ public class MeetingServiceIntegrationTest {
         outputMeetingDTO = new MeetingDTO(meeting);
 
         Mockito.lenient().when(userService.getMentor()).thenReturn(mentor);
+        Mockito.lenient().when(meetingRepository.findByDate(inputMeetingDTO.getDate())).thenReturn(Collections.emptyList());
         Mockito.lenient().when(meetingRepository.save(meeting)).thenReturn(meeting);
         Mockito.lenient().when(modelMapper.map(inputMeetingDTO, Meeting.class)).thenReturn(meeting);
         Mockito.lenient().when(modelMapper.map(meeting, MeetingDTO.class)).thenReturn(outputMeetingDTO);
@@ -258,6 +264,26 @@ public class MeetingServiceIntegrationTest {
         outputMeetingDTO = new MeetingDTO(meeting);
 
         Mockito.lenient().when(userService.getMentor()).thenReturn(mentor);
+        Mockito.lenient().when(meetingRepository.findByDate(inputMeetingDTO.getDate())).thenReturn(Collections.emptyList());
+        Mockito.lenient().when(meetingRepository.save(meeting)).thenReturn(meeting);
+        Mockito.lenient().when(modelMapper.map(inputMeetingDTO, Meeting.class)).thenReturn(meeting);
+        Mockito.lenient().when(modelMapper.map(meeting, MeetingDTO.class)).thenReturn(outputMeetingDTO);
+
+        Mockito.verify(meetingRepository, Mockito.never()).save(meeting);
+        assertThrows(IllegalArgumentException.class, () -> meetingService.saveMeeting(inputMeetingDTO));
+    }
+
+    @Test
+    void givenMeetingDTOWithDateAndTimeCollidingWithAnotherMeeting_whenSaveMeeting_thenThrowIllegalArgumentException() {
+
+        inputMeetingDTO = new MeetingDTO(meeting);
+        inputMeetingDTO.setId(null);
+        inputMeetingDTO.setMentorId(null);
+        inputMeetingDTO.setEndTime(inputMeetingDTO.getStartTime().plusMinutes(20));
+        outputMeetingDTO = new MeetingDTO(meeting);
+
+        Mockito.lenient().when(userService.getMentor()).thenReturn(mentor);
+        Mockito.lenient().when(meetingRepository.findByDate(inputMeetingDTO.getDate())).thenReturn(List.of(meeting));
         Mockito.lenient().when(meetingRepository.save(meeting)).thenReturn(meeting);
         Mockito.lenient().when(modelMapper.map(inputMeetingDTO, Meeting.class)).thenReturn(meeting);
         Mockito.lenient().when(modelMapper.map(meeting, MeetingDTO.class)).thenReturn(outputMeetingDTO);
@@ -275,6 +301,7 @@ public class MeetingServiceIntegrationTest {
         outputMeetingDTO = new MeetingDTO(meeting);
 
         Mockito.lenient().when(userService.getMentor()).thenReturn(mentor);
+        Mockito.lenient().when(meetingRepository.findByDate(inputMeetingDTO.getDate())).thenReturn(Collections.emptyList());
         Mockito.lenient().when(meetingRepository.save(meeting)).thenReturn(meeting);
         Mockito.lenient().when(modelMapper.map(inputMeetingDTO, Meeting.class)).thenReturn(meeting);
         Mockito.lenient().when(modelMapper.map(meeting, MeetingDTO.class)).thenReturn(outputMeetingDTO);
@@ -405,8 +432,6 @@ public class MeetingServiceIntegrationTest {
 
     @Test
     void givenMeetingDTOWithEndTime_whenUpdateMeeting_thenThrowIllegalArgumentException() {
-
-        //MeetingDTO(LocalDate date, LocalTime startTime, LocalTime endTime, Integer mentorId, Integer studentId)
 
         inputMeetingDTO = new MeetingDTO(null, null, meeting.getEndTime(), null, student.getId());
         Meeting dbMeeting = new Meeting(meeting.getDate(), meeting.getStartTime(), meeting.getEndTime(), meeting.getMentor());

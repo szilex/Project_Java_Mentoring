@@ -78,9 +78,24 @@ public class MeetingService implements IMeetingService {
             throw new IllegalArgumentException("Illegal argument specified");
         }
 
-
         if (!Duration.between(meetingDTO.getStartTime(), meetingDTO.getEndTime()).equals(Duration.of(15, MINUTES))) {
             throw new IllegalArgumentException("Time interval must be equal to 15 minutes");
+        }
+
+        List<Meeting> meetings = meetingRepository.findByDate(meetingDTO.getDate()).stream()
+                .filter(x -> {
+                    if (x.getStartTime().isBefore(meetingDTO.getStartTime()) && x.getEndTime().isAfter(meetingDTO.getStartTime()))
+                        return true;
+                    if (x.getStartTime().isBefore(meetingDTO.getEndTime()) && x.getEndTime().isAfter(meetingDTO.getEndTime()))
+                        return true;
+                    if (x.getStartTime().equals(meetingDTO.getStartTime()))
+                        return true;
+
+                    return false;
+                })
+                .collect(Collectors.toList());
+        if (meetings.size() > 0) {
+            throw new IllegalArgumentException("Meeting collides with already existing meeting");
         }
 
         Meeting meeting = convertToEntity(meetingDTO);
@@ -103,8 +118,6 @@ public class MeetingService implements IMeetingService {
         if (meetingDTO.getDate() != null || meetingDTO.getStartTime() != null || meetingDTO.getEndTime() != null || meetingDTO.getMentorId() != null) {
             throw new IllegalArgumentException("Illegal argument specified");
         }
-
-
 
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         String username = (principal instanceof UserDetails) ? ((UserDetails)principal).getUsername() : principal.toString();
