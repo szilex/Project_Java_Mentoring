@@ -7,6 +7,8 @@ import com.euvic.mentoring.entity.MeetingDTO;
 import com.euvic.mentoring.entity.User;
 import com.euvic.mentoring.repository.MeetingRepository;
 import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -82,19 +84,16 @@ public class MeetingService implements IMeetingService {
             throw new IllegalArgumentException("Time interval must be equal to 15 minutes");
         }
 
-        List<Meeting> meetings = meetingRepository.findByDate(meetingDTO.getDate()).stream()
+        long collidingMeetingsAmount = meetingRepository.findByDate(meetingDTO.getDate()).stream()
                 .filter(x -> {
                     if (x.getStartTime().isBefore(meetingDTO.getStartTime()) && x.getEndTime().isAfter(meetingDTO.getStartTime()))
                         return true;
                     if (x.getStartTime().isBefore(meetingDTO.getEndTime()) && x.getEndTime().isAfter(meetingDTO.getEndTime()))
                         return true;
-                    if (x.getStartTime().equals(meetingDTO.getStartTime()))
-                        return true;
-
-                    return false;
+                    return x.getStartTime().equals(meetingDTO.getStartTime());
                 })
-                .collect(Collectors.toList());
-        if (meetings.size() > 0) {
+                .count();
+        if (collidingMeetingsAmount > 0) {
             throw new IllegalArgumentException("Meeting collides with already existing meeting");
         }
 
@@ -122,10 +121,14 @@ public class MeetingService implements IMeetingService {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         String username = (principal instanceof UserDetails) ? ((UserDetails)principal).getUsername() : principal.toString();
 
-        User loggedStudent = userService.getStudents().stream()
+        Optional<User> dbStudent = userService.getStudents().stream()
                 .filter(x->x.getMail().equals(username))
-                .findFirst()
-                .get();
+                .findFirst();
+        if (dbStudent.isEmpty()) {
+            throw new UserNotFoundException();
+        }
+
+        User loggedStudent = dbStudent.get();
         if (loggedStudent.getId() != meetingDTO.getStudentId()) {
             throw new IllegalArgumentException("Student cannot book a meeting for another student");
         }
@@ -137,16 +140,14 @@ public class MeetingService implements IMeetingService {
 
         Meeting temporaryMeeting = dbMeeting.get();
         if(temporaryMeeting.getStudent() != null) {
-            throw new IllegalArgumentException("Meeting with specified id is already booked: " + meetingDTO.getId());
+            throw new IllegalArgumentException("Meeting with specified id is already booked");
         }
 
         temporaryMeeting.setStudent(loggedStudent);
         Meeting savedMeeting = meetingRepository.save(temporaryMeeting);
 
-        try {
-            sendMessageToStudent(savedMeeting);
-            sendMessageToMentor(savedMeeting);
-        } catch (MessagingException e) { }
+        sendMessageToStudent(savedMeeting);
+        sendMessageToMentor(savedMeeting);
 
         return convertToDTO(savedMeeting);
     }
@@ -155,7 +156,6 @@ public class MeetingService implements IMeetingService {
     public void deleteMeeting(int id) throws MeetingNotFoundException {
 
         Optional<Meeting> meeting = meetingRepository.findById(id);
-
         if (meeting.isPresent()) {
             meetingRepository.delete(meeting.get());
         } else {
@@ -163,25 +163,40 @@ public class MeetingService implements IMeetingService {
         }
     }
 
-    private void sendMessageToStudent(Meeting meeting) throws MessagingException {
-        String message = createMessage(meeting, "Student");
-        mailService.sendMail(meeting.getStudent().getMail(), "Meeting reservation", message, false);
+    private void sendMessageToStudent(Meeting meeting) {
+
+        try {
+            String message = createMessage(meeting, meeting.getStudent().getAuthority());
+            mailService.sendMail(meeting.getStudent().getMail(), "Confirmation for meeting reservation", message, false);
+        } catch (MessagingException e) {
+            Logger logger = LoggerFactory.getLogger(MeetingService.class);
+            logger.error("Could not send a confirmation for meeting reservation to: " + meeting.getStudent().getMail());
+            logger.error(e.getMessage());
+        }
     }
 
-    private void sendMessageToMentor(Meeting meeting) throws MessagingException {
-        String message = createMessage(meeting, "Mentor");
-        mailService.sendMail(meeting.getMentor().getMail(), "Meeting reservation", message, false);
+    private void sendMessageToMentor(Meeting meeting) {
+
+        try {
+            String message = createMessage(meeting, meeting.getMentor().getAuthority());
+            mailService.sendMail(meeting.getMentor().getMail(), "New meeting reservation", message, false);
+        } catch (MessagingException e) {
+            Logger logger = LoggerFactory.getLogger(MeetingService.class);
+            logger.error("Could not send info about meeting reservation to: " + meeting.getMentor().getMail());
+            logger.error(e.getMessage());
+        }
     }
 
-    private String createMessage(Meeting meeting, String userType) {
+    private String createMessage(Meeting meeting, String authority) {
+
         StringBuilder message = new StringBuilder();
         message.append("Hello!\n\n");
-        switch(userType) {
-            case "Mentor" :
+        switch(authority) {
+            case "ROLE_MENTOR" :
                 message.append("Student: ").append(meeting.getStudent().getFirstName()).append(' ').append(meeting.getStudent().getLastName()).append(" booked a meeting at:\n\n");
                 break;
-            case "Student" :
-                message.append("You've booked a meeting at:\n\n");
+            case "ROLE_STUDENT" :
+                message.append("You've made a reservation for a meeting at:\n\n");
                 break;
             default:
                 message.append("Meeting details:");

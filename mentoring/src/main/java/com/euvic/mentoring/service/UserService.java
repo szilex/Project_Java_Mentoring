@@ -100,7 +100,7 @@ public class UserService implements IUserService {
         Optional<User> dbStudent = userRepository.findByIdAndAuthority(student.getId(), "ROLE_STUDENT");
         if (dbStudent.isPresent()) {
 
-            if (!isInvokedByCorrectUser(student.getId())) {
+            if (isInvokedByIncorrectUser(student.getId())) {
                 throw new IllegalArgumentException("Students can only update their own credentials");
             }
 
@@ -123,7 +123,7 @@ public class UserService implements IUserService {
         Optional<User> student = userRepository.findByIdAndAuthority(id, "ROLE_STUDENT");
         if (student.isPresent()) {
 
-            if (!isInvokedByCorrectUser(id)) {
+            if (isInvokedByIncorrectUser(id)) {
                 throw new IllegalArgumentException("Students can only delete their own accounts");
             }
 
@@ -134,17 +134,14 @@ public class UserService implements IUserService {
         throw new UserNotFoundException(id);
     }
 
-    private boolean isInvokedByCorrectUser(int id) {
+    private boolean isInvokedByIncorrectUser(int id) {
 
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         String username = (principal instanceof UserDetails) ? ((UserDetails)principal).getUsername() : principal.toString();
 
         int currentStudentId = userRepository.findByMailAndAuthority(username, "ROLE_STUDENT").get().getId();
-        if (currentStudentId != id) {
-            return false;
-        }
 
-        return true;
+        return currentStudentId != id;
     }
 
     private User getCurrentUser() {

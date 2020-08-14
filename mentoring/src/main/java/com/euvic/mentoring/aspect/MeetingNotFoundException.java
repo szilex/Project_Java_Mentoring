@@ -11,6 +11,9 @@ public class MeetingNotFoundException extends RuntimeException {
     public MeetingNotFoundException(int userId) {
         super("Meeting with specified id not found: " + userId);
         this.userId = userId;
+    }
 
+    public MeetingNotFoundException(String message) {
+         super(message);
     }
 }
