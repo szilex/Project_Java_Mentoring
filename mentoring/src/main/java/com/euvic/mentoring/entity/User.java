@@ -12,7 +12,7 @@ public class User {
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY )
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private int id;
 
@@ -35,7 +35,7 @@ public class User {
     private String lastName;
 
     @OneToMany(mappedBy = "student",
-                cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH},
+                cascade = {CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH, CascadeType.PERSIST},
                 fetch = FetchType.LAZY)
     private List<Meeting> meetings;
 
@@ -46,6 +46,26 @@ public class User {
     public User(String mail, String password, String firstName, String lastName) {
         this.mail = mail;
         this.password = password;
+        this.firstName = firstName;
+        this.lastName = lastName;
+    }
+
+    public User(String mail, String password, String authority, int enabled, String firstName, String lastName) {
+        this.id = id;
+        this.mail = mail;
+        this.password = password;
+        this.authority = authority;
+        this.enabled = enabled;
+        this.firstName = firstName;
+        this.lastName = lastName;
+    }
+
+    public User(int id, String mail, String password, String authority, int enabled, String firstName, String lastName) {
+        this.id = id;
+        this.mail = mail;
+        this.password = password;
+        this.authority = authority;
+        this.enabled = enabled;
         this.firstName = firstName;
         this.lastName = lastName;
     }

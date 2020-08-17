@@ -9,6 +9,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.savedrequest.NullRequestCache;
 
 import javax.sql.DataSource;
@@ -20,11 +21,13 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     private final DataSource dataSource;
     private final CustomBasicAuthenticationEntryPoint authenticationEntryPoint;
+    private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public SecurityConfiguration(DataSource dataSource, CustomBasicAuthenticationEntryPoint authenticationEntryPoint) {
+    public SecurityConfiguration(DataSource dataSource, CustomBasicAuthenticationEntryPoint authenticationEntryPoint, PasswordEncoder passwordEncoder) {
         this.dataSource = dataSource;
         this.authenticationEntryPoint = authenticationEntryPoint;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Autowired
@@ -32,7 +35,8 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         authenticationManagerBuilder.jdbcAuthentication()
                 .dataSource(dataSource)
                 .usersByUsernameQuery("SELECT mail, password, enabled FROM users WHERE mail=?")
-                .authoritiesByUsernameQuery("SELECT mail, authority FROM users WHERE mail=?");
+                .authoritiesByUsernameQuery("SELECT mail, authority FROM users WHERE mail=?")
+                .passwordEncoder(passwordEncoder);
     }
 
     @Override
@@ -47,10 +51,11 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.DELETE,"/meeting/{\\d+}").hasRole("MENTOR")
                 .antMatchers("/meeting", "/meeting/", "/meeting/{\\d+}").fullyAuthenticated()
                 .antMatchers("/user/mentor", "/user/mentor/{\\d+}").hasRole("MENTOR")
-                .antMatchers(HttpMethod.GET,"/user/student", "user/student/{\\d+}").access("isAuthenticated() and hasAnyRole('MENTOR','STUDENT')")
-                .antMatchers(HttpMethod.POST,"/user/student").access("!isAuthenticated()")
-                .antMatchers(HttpMethod.PUT,"/user/student").access("isAuthenticated() and hasRole('STUDENT')")
-                .antMatchers(HttpMethod.DELETE,"user/student/{\\d+}").access("isAuthenticated() and hasRole('STUDENT')")
+                .antMatchers(HttpMethod.GET,"/user/student").access("isFullyAuthenticated() and hasAnyRole('MENTOR','STUDENT')")
+                .antMatchers(HttpMethod.GET,"/user/student/{\\d+}").access("isFullyAuthenticated() and hasAnyRole('MENTOR')")
+                .antMatchers(HttpMethod.POST,"/user/student").access("!isFullyAuthenticated()")
+                .antMatchers(HttpMethod.PUT,"/user/student").access("isFullyAuthenticated() and hasRole('STUDENT')")
+                .antMatchers(HttpMethod.DELETE,"/user/student/{\\d+}").access("isFullyAuthenticated() and hasRole('STUDENT')")
                 .and()
             .httpBasic()
                 .authenticationEntryPoint(authenticationEntryPoint)

@@ -6,10 +6,11 @@ import com.euvic.mentoring.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Service
@@ -26,6 +27,7 @@ public class UserService implements IUserService {
     public User getMentor() throws UserNotFoundException {
 
         Optional<User> mentor = userRepository.findFirstByAuthorityOrderByIdAsc("ROLE_MENTOR");
+
         if (mentor.isPresent()) {
             return mentor.get();
         }
@@ -37,6 +39,7 @@ public class UserService implements IUserService {
     public User getStudent(int id) throws UserNotFoundException {
 
         Optional<User> student = userRepository.findByIdAndAuthority(id, "ROLE_STUDENT");
+
         if (student.isPresent()) {
             return student.get();
         }
@@ -46,11 +49,37 @@ public class UserService implements IUserService {
 
     @Override
     public List<User> getStudents() {
-        return userRepository.findAllByAuthority("ROLE_STUDENT");
+
+        User loggedUser = getCurrentlyLoggedUser();
+
+        switch (loggedUser.getAuthority()) {
+            case "ROLE_MENTOR" :
+                return userRepository.findAllByAuthority("ROLE_STUDENT");
+            case "ROLE_STUDENT" :
+                return List.of(loggedUser);
+            default:
+                throw new UserNotFoundException();
+        }
     }
 
     @Override
     public User saveStudent(User student) {
+
+        if (student == null || student.getMail() == null || student.getPassword() == null || student.getFirstName() == null || student.getLastName() == null) {
+            throw new IllegalArgumentException("Insufficient argument list");
+        }
+
+        if (student.getId() != 0 || student.getAuthority() != null || student.getEnabled() != 0) {
+            throw new IllegalArgumentException("Illegal argument specified");
+        }
+
+        Optional<User> dbStudent = userRepository.findByMailAndAuthority(student.getMail(), "ROLE_STUDENT");
+        if (dbStudent.isPresent()) {
+            throw new IllegalArgumentException("User with specified mail already exists");
+        }
+
+        String encodedPassword = new BCryptPasswordEncoder().encode(student.getPassword());
+        student.setPassword(encodedPassword);
         student.setAuthority("ROLE_STUDENT");
         student.setEnabled(1);
 
@@ -58,12 +87,21 @@ public class UserService implements IUserService {
     }
 
     @Override
+    @Transactional
     public User updateStudent(User student) throws UserNotFoundException {
+
+        if (student == null) {
+            throw new IllegalArgumentException("Insufficient argument list");
+        }
+
+        if (student.getEnabled() != 0 || student.getAuthority() != null) {
+            throw new IllegalArgumentException("Illegal argument specified");
+        }
 
         Optional<User> dbStudent = userRepository.findByIdAndAuthority(student.getId(), "ROLE_STUDENT");
         if (dbStudent.isPresent()) {
 
-            if (!isInvokedByCorrectUser(student.getId())) {
+            if (isInvokedByIncorrectUser(student.getId())) {
                 throw new IllegalArgumentException("Students can only update their own credentials");
             }
 
@@ -71,7 +109,8 @@ public class UserService implements IUserService {
             if (student.getFirstName() != null) temporaryStudent.setFirstName(student.getFirstName());
             if (student.getLastName() != null) temporaryStudent.setLastName(student.getLastName());
             if (student.getMail() != null) temporaryStudent.setMail(student.getMail());
-            if (student.getPassword() != null) temporaryStudent.setPassword(student.getPassword());
+            if (student.getPassword() != null) temporaryStudent.setPassword(new BCryptPasswordEncoder().encode(student.getPassword()));
+            temporaryStudent.setEnabled(1);
 
             return userRepository.save(temporaryStudent);
         }
@@ -80,11 +119,13 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public void deleteStudent(int id) throws NoSuchElementException, UserNotFoundException {
+    @Transactional
+    public void deleteStudent(int id) throws UserNotFoundException {
+
         Optional<User> student = userRepository.findByIdAndAuthority(id, "ROLE_STUDENT");
         if (student.isPresent()) {
 
-            if (!isInvokedByCorrectUser(id)) {
+            if (isInvokedByIncorrectUser(id)) {
                 throw new IllegalArgumentException("Students can only delete their own accounts");
             }
 
@@ -95,15 +136,31 @@ public class UserService implements IUserService {
         throw new UserNotFoundException(id);
     }
 
-    private boolean isInvokedByCorrectUser(int id) {
+    private boolean isInvokedByIncorrectUser(int id) {
+
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         String username = (principal instanceof UserDetails) ? ((UserDetails)principal).getUsername() : principal.toString();
 
-        int currentStudentId = userRepository.findByMailAndAuthority(username, "ROLE_STUDENT").get().getId();
-        if (currentStudentId != id) {
-            return false;
+        Optional<User> dbUser = userRepository.findByMailAndAuthority(username, "ROLE_STUDENT");
+
+        if (dbUser.isEmpty()) {
+            throw new UserNotFoundException("Could not get credentials of currently logged student from the database");
         }
 
-        return true;
+        return dbUser.get().getId() != id;
+    }
+
+    private User getCurrentlyLoggedUser() {
+
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        String username = (principal instanceof UserDetails) ? ((UserDetails)principal).getUsername() : principal.toString();
+
+        Optional<User> dbUser = userRepository.findByMail(username);
+
+        if (dbUser.isEmpty()) {
+            throw new UserNotFoundException("Could not get credentials of currently logged student from the database");
+        }
+
+        return dbUser.get();
     }
 }

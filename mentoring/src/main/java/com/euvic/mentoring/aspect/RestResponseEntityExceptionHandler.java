@@ -36,7 +36,7 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
     }
 
     @ExceptionHandler(value = { NoSuchElementException.class })
-    protected ResponseEntity<Object> handleNoSuchElement(Exception exception, WebRequest request) {
+    protected ResponseEntity<Object> handleNoSuchElement(NoSuchElementException exception, WebRequest request) {
 
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("timestamp", LocalDateTime.now());

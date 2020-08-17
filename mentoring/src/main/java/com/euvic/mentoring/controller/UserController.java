@@ -1,6 +1,5 @@
 package com.euvic.mentoring.controller;
 
-import com.euvic.mentoring.aspect.UserNotFoundException;
 import com.euvic.mentoring.entity.User;
 import com.euvic.mentoring.service.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,12 +19,12 @@ public class UserController {
     }
 
     @GetMapping("/mentor")
-    public User getMentor() throws UserNotFoundException {
+    public User getMentor(){
         return userService.getMentor();
     }
 
     @GetMapping("/student/{id}")
-    public User getStudent(@PathVariable int id) throws UserNotFoundException {
+    public User getStudent(@PathVariable int id) {
         return userService.getStudent(id);
     }
 
@@ -40,12 +39,12 @@ public class UserController {
     }
 
     @PutMapping("/student")
-    public User updateStudent(@RequestBody User student) throws UserNotFoundException {
+    public User updateStudent(@RequestBody User student) {
         return userService.updateStudent(student);
     }
 
     @DeleteMapping("/student/{id}")
-    public void deleteStudent(@PathVariable int id) throws UserNotFoundException {
+    public void deleteStudent(@PathVariable int id) {
         userService.deleteStudent(id);
     }
 }
