@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Service
@@ -28,6 +27,7 @@ public class UserService implements IUserService {
     public User getMentor() throws UserNotFoundException {
 
         Optional<User> mentor = userRepository.findFirstByAuthorityOrderByIdAsc("ROLE_MENTOR");
+
         if (mentor.isPresent()) {
             return mentor.get();
         }
@@ -39,6 +39,7 @@ public class UserService implements IUserService {
     public User getStudent(int id) throws UserNotFoundException {
 
         Optional<User> student = userRepository.findByIdAndAuthority(id, "ROLE_STUDENT");
+
         if (student.isPresent()) {
             return student.get();
         }
@@ -49,7 +50,7 @@ public class UserService implements IUserService {
     @Override
     public List<User> getStudents() {
 
-        User loggedUser = getCurrentUser();
+        User loggedUser = getCurrentlyLoggedUser();
 
         switch (loggedUser.getAuthority()) {
             case "ROLE_MENTOR" :
@@ -77,10 +78,10 @@ public class UserService implements IUserService {
             throw new IllegalArgumentException("User with specified mail already exists");
         }
 
-        student.setAuthority("ROLE_STUDENT");
-        student.setEnabled(1);
         String encodedPassword = new BCryptPasswordEncoder().encode(student.getPassword());
         student.setPassword(encodedPassword);
+        student.setAuthority("ROLE_STUDENT");
+        student.setEnabled(1);
 
         return userRepository.save(student);
     }
@@ -119,7 +120,8 @@ public class UserService implements IUserService {
 
     @Override
     @Transactional
-    public void deleteStudent(int id) throws NoSuchElementException, UserNotFoundException {
+    public void deleteStudent(int id) throws UserNotFoundException {
+
         Optional<User> student = userRepository.findByIdAndAuthority(id, "ROLE_STUDENT");
         if (student.isPresent()) {
 
@@ -139,16 +141,26 @@ public class UserService implements IUserService {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         String username = (principal instanceof UserDetails) ? ((UserDetails)principal).getUsername() : principal.toString();
 
-        int currentStudentId = userRepository.findByMailAndAuthority(username, "ROLE_STUDENT").get().getId();
+        Optional<User> dbUser = userRepository.findByMailAndAuthority(username, "ROLE_STUDENT");
 
-        return currentStudentId != id;
+        if (dbUser.isEmpty()) {
+            throw new UserNotFoundException("Could not get credentials of currently logged student from the database");
+        }
+
+        return dbUser.get().getId() != id;
     }
 
-    private User getCurrentUser() {
+    private User getCurrentlyLoggedUser() {
 
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         String username = (principal instanceof UserDetails) ? ((UserDetails)principal).getUsername() : principal.toString();
 
-        return userRepository.findByMail(username).get();
+        Optional<User> dbUser = userRepository.findByMail(username);
+
+        if (dbUser.isEmpty()) {
+            throw new UserNotFoundException("Could not get credentials of currently logged student from the database");
+        }
+
+        return dbUser.get();
     }
 }

@@ -13,7 +13,7 @@ import java.util.concurrent.CompletableFuture;
 @Service
 public class MailService implements IMailService {
 
-    private JavaMailSender javaMailSender;
+    private final JavaMailSender javaMailSender;
 
     @Autowired
     public MailService(JavaMailSender javaMailSender) {

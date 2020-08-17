@@ -122,7 +122,7 @@ public class MeetingService implements IMeetingService {
         String username = (principal instanceof UserDetails) ? ((UserDetails)principal).getUsername() : principal.toString();
 
         Optional<User> dbStudent = userService.getStudents().stream()
-                .filter(x->x.getMail().equals(username))
+                .filter(x -> x.getMail().equals(username))
                 .findFirst();
         if (dbStudent.isEmpty()) {
             throw new UserNotFoundException();
