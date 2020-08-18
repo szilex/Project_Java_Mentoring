@@ -90,7 +90,7 @@ public class UserService implements IUserService {
     @Transactional
     public User updateStudent(User student) throws UserNotFoundException {
 
-        if (student == null) {
+        if (student == null || student.getId() == 0) {
             throw new IllegalArgumentException("Insufficient argument list");
         }
 
